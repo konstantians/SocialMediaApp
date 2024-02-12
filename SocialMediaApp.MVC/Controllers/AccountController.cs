@@ -86,4 +86,42 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home", new { SuccessfulAccountActivation = true });
     }
 
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> SignIn(bool falseResetAccount, bool invalidCredentials)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+        ViewData["FalseResetAccount"] = falseResetAccount;
+        ViewData["InvalidCredentials"] = invalidCredentials;
+        return View();
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> SignIn(SignInModel signInModel)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+        if (!ModelState.IsValid)
+        {
+            return View();
+        }
+
+        bool result = await _authenticationProcedures.SignInUserAsync(signInModel.Username!, signInModel.Password!, signInModel.RememberMe);
+        if (!result)
+        {
+            ViewData["FalseResetAccount"] = false;
+            ViewData["InvalidCredentials"] = true;
+            return View();
+        }
+
+        return RedirectToAction("Index", "Home", new { SuccessfulSignIn = true });
+    }
+
+
 }

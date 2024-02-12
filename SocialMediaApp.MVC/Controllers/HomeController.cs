@@ -13,8 +13,9 @@ namespace SocialMediaApp.MVC.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index(bool failedAccountActivation, bool successfulAccountActivation)
+        public IActionResult Index(bool successfulSignIn, bool failedAccountActivation, bool successfulAccountActivation)
         {
+            ViewData["SuccessfulSignIn"] = successfulSignIn;
             ViewData["FailedAccountActivation"] = failedAccountActivation;
             ViewData["SuccessfulAccountActivation"] = successfulAccountActivation;
             return View();
