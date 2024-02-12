@@ -1,4 +1,4 @@
-﻿namespace CinemaApplication.EmailServiceLibrary;
+﻿namespace SocialMediaApp.EmailServiceLibrary;
 
 public class SmtpSettings
 {
