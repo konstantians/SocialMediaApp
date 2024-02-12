@@ -1,0 +1,74 @@
+﻿@{
+    ViewData["Title"] = "Register";
+    bool duplicateUsername = (bool)ViewData["DuplicateUsername"]!;
+    bool duplicateEmail = (bool)ViewData["DuplicateEmail"]!;
+}
+
+@model RegisterModel
+
+@if (duplicateUsername || duplicateEmail)
+{
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </symbol>
+    </svg>
+    <div class="row">
+        <div class="offset-2 col-8">
+            <div class="alert alert-danger d-flex align-items-center alert-dismissible fade show" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                @if (duplicateUsername)
+                {
+                    <div>There is another user with the given username.</div>
+                }
+                else if (duplicateEmail)
+                {
+                    <div>There is another user with the given email.</div>
+                }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="shadow offset-2 col-8 p-3" style="background-color:white;">
+    <h2 class="text-center mb-4">User Register</h2>
+    <form method="post">
+        <div class="row">
+            <div class="col-6 mb-4 mt-1">
+                <label class="form-label" asp-for="Username"><i class="fa-solid fa-user me-2"></i>Username</label>
+                <input class="form-control" asp-for="Username" type="text" placeholder="Enter username">
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="col-6 mb-4 mt-1">
+                <label class="form-label" asp-for="Email"><i class="fa-solid fa-envelope me-2"></i>Email</label>
+                <input class="form-control" asp-for="Email" type="email" placeholder="Enter email">
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="col-6 mb-4 mt-1">
+                <label class="form-label" asp-for="Password"><i class="fa-solid fa-lock me-2"></i>Password</label>
+                <input class="form-control" asp-for="Password" type="password" placeholder="Enter password">
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="col-6 mb-4 mt-1">
+                <label class="form-label" asp-for="PhoneNumber"><i class="fa-solid fa-phone me-2"></i> Phone Number</label>
+                <input class="form-control" asp-for="PhoneNumber" type="tel" placeholder="Enter phone number">
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="col-6 mb-4 mt-1">
+                <label class="form-label" asp-for="RepeatPassword"><i class="fa-solid fa-lock me-2"></i>Repeat Password</label>
+                <input class="form-control" asp-for="RepeatPassword" type="password" placeholder="Repeat password">
+                <span asp-validation-for="RepeatPassword" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <button type="submit" class="btn btn-primary" style="width: 25%;">Register Account</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
