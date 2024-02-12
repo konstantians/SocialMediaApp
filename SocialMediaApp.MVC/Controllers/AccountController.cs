@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SocialMediaApp.AuthenticationLibrary;
 using SocialMediaApp.EmailServiceLibrary;
 using SocialMediaApp.MVC.Models;
+using SocialMediaApp.MVC.Models.EditAccountModels;
 using SocialMediaApp.SharedModels;
 using System.Net;
 
@@ -205,7 +206,71 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home", new { successfulPasswordReset = true });
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> EditAccount(bool duplicateUsernameError, bool duplicateEmailError,
+        bool basicInformationChangeError, bool basicInformationChangeSuccess,
+        bool passwordChangeSuccess, bool passwordChangeError, bool passwordMismatchError)
+    {
+        //AppUser appUser = await _userHelperMethods.GetUserWithBankCardsAndTickets();
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        AccountBasicSettingsViewModel accountBasicSettingsViewModel = new()
+        {
+            Username = appUser.UserName,
+            PhoneNumber = appUser.PhoneNumber,
+        };
 
+        ChangePasswordModel changePasswordModel = new()
+        {
+            OldPassword = appUser.PasswordHash
+        };
+
+        ChangeEmailModel resetEmailModel = new()
+        {
+            OldEmail = appUser.Email
+        };
+
+        EditAccountModel editAccountModel = new()
+        {
+            AccountBasicSettingsViewModel = accountBasicSettingsViewModel,
+            ChangePasswordModel = changePasswordModel,
+            ChangeEmailModel = resetEmailModel
+        };
+
+        ViewData["DuplicateUsernameError"] = duplicateUsernameError;
+        ViewData["DuplicateEmailError"] = duplicateEmailError;
+        ViewData["BasicInformationChangeError"] = basicInformationChangeError;
+        ViewData["BasicInformationChangeSuccess"] = basicInformationChangeSuccess;
+
+        ViewData["PasswordChangeSuccess"] = passwordChangeSuccess;
+        ViewData["PasswordChangeError"] = passwordChangeError;
+        ViewData["PasswordMismatchError"] = passwordMismatchError;
+
+        return View(editAccountModel);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ChangeBasicAccountSettings(AccountBasicSettingsViewModel accountBasicSettingsViewModel)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        appUser.UserName = accountBasicSettingsViewModel.Username;
+        appUser.PhoneNumber = accountBasicSettingsViewModel.PhoneNumber;
+
+        if (appUser.UserName != accountBasicSettingsViewModel.Username)
+        {
+            if (await _authenticationProcedures.FindByUsernameAsync(accountBasicSettingsViewModel.Username!) is not null)
+            {
+                return RedirectToAction("EditAccount", "Account", new { duplicateUsernameError = true });
+            }
+        }
+
+        bool result = await _authenticationProcedures.UpdateUserAccountAsync(appUser);
+        if (!result)
+            return RedirectToAction("EditAccount", "Account", new { basicInformationChangeError = true });
+
+        return RedirectToAction("EditAccount", "Account", new { basicInformationChangeSuccess = true });
+    }
 
     [HttpPost]
     [Authorize]
