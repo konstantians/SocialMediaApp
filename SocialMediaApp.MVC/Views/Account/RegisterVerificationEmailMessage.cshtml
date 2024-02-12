@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Register Result";
+    bool emailSendSuccessfully = (bool)ViewData["EmailSendSuccessfully"]!;
+}
+
+@if (emailSendSuccessfully)
+{
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card shadow p-3" style="background-color:white;">
+                <div class="text-center">
+                    <img class="card-img-top img-fluid" style="max-width:100px; max-height:100px;" src="~/images/blueTickTransparent.png" alt="success image">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-3">Registration Confirmation!</h3>
+                    <p class="card-text text-center">
+                        Thank you for creating an account with us!<br>
+                        For your account activation you will have to check your email inbox and confirm your registration by clicking the confirmation link we have sent you.<br><br>
+                        If you have activated your account then you can press the button "Continue To Home", otherwise you could return back to the login page pressing the button "Return To Login"
+                    </p>
+                    <div class="text-center mt-4">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-lg btn-primary">Continue To Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8 mt-4">
+            <div class="card shadow p-3" style="background-color:white;">
+                <div class="text-center">
+                    <img class="card-img-top img-fluid" style="max-width:100px; max-height:100px;" src="~/images/redXTransparent.png" alt="success image">
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-3">Registration Was Unsuccessful!</h3>
+                    <p class="card-text text-center">
+                        Unfortunately it seems that something something went wrong!<br>
+                        Please make sure that your internet connection is stable and then try again to register with us.
+                    </p>
+                    <div class="d-flex justify-content-center mt-4">
+                        <a asp-controller="Account" asp-action="SignUp" class="btn btn-lg btn-dark me-3">Return to Register</a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-lg btn-primary">Continue To Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
