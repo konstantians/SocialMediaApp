@@ -1,4 +1,4 @@
-﻿namespace CinemaApplication.EmailServiceLibrary;
+﻿namespace SocialMediaApp.EmailServiceLibrary;
 
 using System.Net;
 using System.Net.Mail;
