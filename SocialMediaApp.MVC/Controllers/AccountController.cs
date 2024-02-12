@@ -123,5 +123,11 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home", new { SuccessfulSignIn = true });
     }
 
-
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> LogOut()
+    {
+        await _authenticationProcedures.LogOutUserAsync();
+        return RedirectToAction("Index", "Home");
+    }
 }
