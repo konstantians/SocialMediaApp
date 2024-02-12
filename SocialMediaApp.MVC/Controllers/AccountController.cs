@@ -124,6 +124,90 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(string username, string email)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+        if (username is null)
+        {
+            appUser = await _authenticationProcedures.FindByEmailAsync(email);
+        }
+        else
+        {
+            appUser = await _authenticationProcedures.FindByUsernameAsync(username);
+        }
+
+        if (appUser is null)
+        {
+            return RedirectToAction("SignIn", "Account", new { falseResetAccount = true });
+        }
+
+        string resetToken = await _authenticationProcedures.CreateResetPasswordTokenAsync(appUser);
+
+        //maybe do a check here
+        string message = "Click on the following link to reset your account password:";
+        string? link = Url.Action("ResetPassword", "Account", new
+        {
+            userId = WebUtility.UrlEncode(appUser.Id),
+            token = WebUtility.UrlEncode(resetToken)
+        }, Request.Scheme);
+        string? confirmationLink = $"{message} {link}";
+        ViewData["EmailSendSuccessfully"] = await _emailService.SendEmailAsync(appUser.Email!, "Email Confirmation", confirmationLink);
+
+        return View("ResetPasswordEmailMessage");
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(string userId, string token)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+        appUser = await _authenticationProcedures.FindByUserIdAsync(userId);
+        if (appUser is null)
+        {
+            //TODO Add error here
+            return RedirectToAction("Index", "Home");
+        }
+
+        ViewData["Username"] = appUser.UserName;
+        ViewData["UserId"] = userId;
+        ViewData["Token"] = token;
+        return View();
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(ResetPasswordModel resetPasswordModel)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+        if (!ModelState.IsValid)
+        {
+            return View();
+        }
+
+        bool succeeded = await _authenticationProcedures.ResetPasswordAsync(
+            resetPasswordModel.UserId!, WebUtility.UrlDecode(resetPasswordModel.Token!), resetPasswordModel.Password!);
+
+
+        if (!succeeded)
+        {
+            return RedirectToAction("Index", "Home", new { failedPasswordReset = true });
+        }
+        return RedirectToAction("Index", "Home", new { successfulPasswordReset = true });
+    }
+
+
+
+    [HttpPost]
     [Authorize]
     public async Task<IActionResult> LogOut()
     {

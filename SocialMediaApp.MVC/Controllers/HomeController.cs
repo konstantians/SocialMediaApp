@@ -13,11 +13,14 @@ namespace SocialMediaApp.MVC.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index(bool successfulSignIn, bool failedAccountActivation, bool successfulAccountActivation)
+        public IActionResult Index(bool successfulSignIn, bool failedAccountActivation, bool successfulAccountActivation,
+            bool successfulPasswordReset, bool failedPasswordReset)
         {
             ViewData["SuccessfulSignIn"] = successfulSignIn;
             ViewData["FailedAccountActivation"] = failedAccountActivation;
             ViewData["SuccessfulAccountActivation"] = successfulAccountActivation;
+            ViewData["SuccessfulPasswordReset"] = successfulPasswordReset;
+            ViewData["FailedPasswordReset"] = failedPasswordReset;
             return View();
         }
 

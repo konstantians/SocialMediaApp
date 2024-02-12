@@ -3,11 +3,11 @@
     bool successfulAccountActivation = (bool)ViewData["SuccessfulAccountActivation"]!;
     bool failedAccountActivation = (bool)ViewData["FailedAccountActivation"]!;
     bool successfulSignIn = (bool)ViewData["SuccessfulSignIn"]!;
-    //bool successfulPasswordReset = (bool)ViewData["SuccessfulPasswordReset"]!;
-    //bool failedPasswordReset = (bool)ViewData["FailedPasswordReset"]!;
+    bool successfulPasswordReset = (bool)ViewData["SuccessfulPasswordReset"]!;
+    bool failedPasswordReset = (bool)ViewData["FailedPasswordReset"]!;
 }
 
-@if (successfulAccountActivation || successfulSignIn)
+@if (successfulAccountActivation || successfulSignIn || successfulPasswordReset)
 {
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
@@ -27,10 +27,10 @@
                     {
                         <div>You have successfully signed in!</div>
                     }
-                    @* else if ((bool)ViewData["SuccessfulPasswordReset"]!)
+                    else if (successfulPasswordReset)
                     {
                         <div>You have successfully reset your password!</div>
-                    } *@
+                    }
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             </div>
@@ -54,13 +54,13 @@ else if (failedAccountActivation)
                 Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
             </div>
         }
-        @* @if ((bool)ViewData["FailedPasswordReset"]!)
+        @if (failedPasswordReset)
         {
             <div>
                 Unfortunately something went wrong and your account password could not be changed. <br>
                 Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
             </div>
-        } *@
+        }
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
