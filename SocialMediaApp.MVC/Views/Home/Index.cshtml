@@ -2,12 +2,12 @@
     ViewData["Title"] = "Home Page";
     bool successfulAccountActivation = (bool)ViewData["SuccessfulAccountActivation"]!;
     bool failedAccountActivation = (bool)ViewData["FailedAccountActivation"]!;
-    //bool successfulSignIn = (bool)ViewData["SuccessfulSignIn"]!;
+    bool successfulSignIn = (bool)ViewData["SuccessfulSignIn"]!;
     //bool successfulPasswordReset = (bool)ViewData["SuccessfulPasswordReset"]!;
     //bool failedPasswordReset = (bool)ViewData["FailedPasswordReset"]!;
 }
 
-@if (successfulAccountActivation)
+@if (successfulAccountActivation || successfulSignIn)
 {
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
@@ -23,11 +23,11 @@
                     {
                         <div>You have successfully activated your account!</div>
                     }
-                    @* else if ((bool)ViewData["SuccessfulSignIn"]!)
+                    else if (successfulSignIn)
                     {
                         <div>You have successfully signed in!</div>
                     }
-                    else if ((bool)ViewData["SuccessfulPasswordReset"]!)
+                    @* else if ((bool)ViewData["SuccessfulPasswordReset"]!)
                     {
                         <div>You have successfully reset your password!</div>
                     } *@
