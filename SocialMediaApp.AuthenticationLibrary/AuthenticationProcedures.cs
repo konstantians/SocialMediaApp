@@ -78,6 +78,7 @@ public class AuthenticationProcedures : IAuthenticationProcedures
             throw;
         }
     }
+
     public async Task<(string, string)> RegisterUserAsync(AppUser appUser, string password,
         bool isPersistent)
     {
