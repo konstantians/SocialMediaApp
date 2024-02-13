@@ -274,6 +274,27 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordModel changePasswordModel)
+    {
+        if (!ModelState.IsValid)
+        {
+            return RedirectToAction("EditAccount", "Account", new { passwordChangeError = true });
+        }
+
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+
+        (bool result, string errorCode) = await _authenticationProcedures.ChangePasswordAsync(appUser, changePasswordModel.OldPassword!, changePasswordModel.NewPassword!);
+
+        if (!result && errorCode == "passwordMismatch")
+            return RedirectToAction("EditAccount", "Account", new { passwordMismatchError = true });
+        else if (!result)
+            return RedirectToAction("EditAccount", "Account", new { passwordChangeError = true });
+
+        return RedirectToAction("EditAccount", "Account", new { passwordChangeSuccess = true });
+    }
+
+    [HttpPost]
+    [Authorize]
     public async Task<IActionResult> LogOut()
     {
         await _authenticationProcedures.LogOutUserAsync();

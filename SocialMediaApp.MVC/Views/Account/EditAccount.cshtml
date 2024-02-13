@@ -5,13 +5,13 @@
     bool duplicateUsernameError = (bool)ViewData["DuplicateUsernameError"]!;
     bool basicInformationChangeError = (bool)ViewData["BasicInformationChangeError"]!;
     bool basicInformationChangeSuccess = (bool)ViewData["BasicInformationChangeSuccess"]!;
-    //bool passwordMismatchError = (bool)ViewData["PasswordMismatchError"]!;
-    //bool passwordChangeError = (bool)ViewData["PasswordChangeError"]!; 
-    //bool passwordChangeSuccess = (bool)ViewData["PasswordChangeSuccess"]!
+    bool passwordMismatchError = (bool)ViewData["PasswordMismatchError"]!;
+    bool passwordChangeError = (bool)ViewData["PasswordChangeError"]!;
+    bool passwordChangeSuccess = (bool)ViewData["PasswordChangeSuccess"]!;
     //bool duplicateEmailError = (bool)ViewData["DuplicateEmailError"]!;
 }
 
-@if (duplicateUsernameError || basicInformationChangeError)
+@if (duplicateUsernameError || basicInformationChangeError || passwordChangeError || passwordMismatchError)
 {
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
@@ -33,30 +33,30 @@
                         Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
                     </div>
                 }
-                @* else if ((bool)ViewData["DuplicateEmailError"]!)
-                {
-                    <div>There is another user with the given email.</div>
-                } *@
-                @* else if ((bool)ViewData["PasswordChangeError"]!)
+                else if (passwordChangeError)
                 {
                     <div>
                         Something went wrong while updating your account password.
                         Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
                     </div>
                 }
-                else if ((bool)ViewData["PasswordMismatchError"]!)
+                else if (passwordMismatchError)
                 {
                     <div>
                         The current password you provided is not the password of the account.
                         Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
                     </div>
+                }
+                @* else if ((bool)ViewData["DuplicateEmailError"]!)
+                {
+                    <div>There is another user with the given email.</div>
                 } *@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     </div>
 }
-else if (basicInformationChangeSuccess)
+else if (basicInformationChangeSuccess || passwordChangeSuccess)
 {
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
@@ -71,7 +71,9 @@ else if (basicInformationChangeSuccess)
                 {
                     <div>Your account's basic information has been updated successfully!</div>
                 }
-                <!-- <div>Your account password has been updated successfully!</div> -->
+                else if(passwordChangeSuccess){
+                    <div>Your account password has been updated successfully!</div>
+                }
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
@@ -149,6 +151,44 @@ else if (basicInformationChangeSuccess)
             </div>
         </div>
     </div>
+</div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <form id="changePasswordForm" method="post" asp-controller="Account" asp-action="ChangePassword">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordTitle">Change Password Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="text-align: left;">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label asp-for="ChangePasswordModel.OldPassword" class="form-label">Old Password</label>
+                                <input asp-for="ChangePasswordModel.OldPassword" value="" class="form-control" type="password">
+                                <span asp-validation-for="ChangePasswordModel.OldPassword" class="text-danger"></span>
+                            </div>
+                            <div class=" col-12 mb-3">
+                                <label asp-for="ChangePasswordModel.NewPassword" class="form-label">New Password</label>
+                                <input asp-for="ChangePasswordModel.NewPassword" class="form-control" type="password" />
+                                <span asp-validation-for="ChangePasswordModel.NewPassword" class="text-danger"></span>
+                            </div>
+                            <div class=" col-12 mb-3">
+                                <label asp-for="ChangePasswordModel.ConfirmNewPassword" class="form-label">Confirm New Password</label>
+                                <input asp-for="ChangePasswordModel.ConfirmNewPassword" class="form-control" type="password">
+                                <span asp-validation-for="ChangePasswordModel.ConfirmNewPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
 
