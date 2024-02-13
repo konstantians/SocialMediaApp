@@ -239,6 +239,7 @@ public class AccountController : Controller
 
         ViewData["DuplicateUsernameError"] = duplicateUsernameError;
         ViewData["DuplicateEmailError"] = duplicateEmailError;
+
         ViewData["BasicInformationChangeError"] = basicInformationChangeError;
         ViewData["BasicInformationChangeSuccess"] = basicInformationChangeSuccess;
 
@@ -291,6 +292,61 @@ public class AccountController : Controller
             return RedirectToAction("EditAccount", "Account", new { passwordChangeError = true });
 
         return RedirectToAction("EditAccount", "Account", new { passwordChangeSuccess = true });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> RequestChangeAccountEmail(ChangeEmailModel changeEmailModel)
+    {
+        if(!ModelState.IsValid)
+        {
+            return RedirectToAction("EditAccount", "Account");
+        }
+
+        AppUser appUser = await _authenticationProcedures.FindByEmailAsync(changeEmailModel.NewEmail!);
+        if (appUser is not null)
+            return RedirectToAction("EditAccount", "Account", new { duplicateEmailError = true });
+
+        appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        string resetToken = await _authenticationProcedures.CreateChangeEmailTokenAsync(appUser, changeEmailModel.NewEmail!);
+
+        //maybe do a check here
+        string message = "Click on the following link to confirm your account's new email:";
+        string? link = Url.Action("ConfirmChangeEmail", "Account", new
+        {
+            userId = WebUtility.UrlEncode(appUser.Id),
+            newEmail = WebUtility.UrlEncode(changeEmailModel.NewEmail),
+            token = WebUtility.UrlEncode(resetToken)
+        }, Request.Scheme);
+        string? confirmationLink = $"{message} {link}";
+        bool result = await _emailService.SendEmailAsync(changeEmailModel.NewEmail!, "Email Change Confirmation", confirmationLink);
+        if (result)
+        {
+            appUser.EmailConfirmed = false;
+            await _authenticationProcedures.UpdateUserAccountAsync(appUser);
+            await _authenticationProcedures.LogOutUserAsync();
+        }
+        return RedirectToAction("EmailChangeVerificationMessage", "Account", new { wasSuccessful = result });
+    }
+
+    public IActionResult EmailChangeVerificationMessage(bool wasSuccessful)
+    {
+        ViewData["EmailSendSuccessfully"] = wasSuccessful;
+        return View();
+    }
+
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmChangeEmail(string userId, string newEmail, string token)
+    {
+        bool succeeded = await _authenticationProcedures.ChangeEmailAsync(userId, WebUtility.UrlDecode(token), WebUtility.UrlDecode(newEmail));
+
+        if (!succeeded)
+        {
+            return RedirectToAction("Index", "Home", new { FailedAccountActivation = true });
+        }
+        return RedirectToAction("Index", "Home", new { SuccessfulAccountActivation = true });
     }
 
     [HttpPost]
