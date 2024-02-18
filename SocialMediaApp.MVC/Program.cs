@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SocialMediaApp.Authentication;
 using SocialMediaApp.AuthenticationLibrary;
+using SocialMediaApp.DataAccessLibrary;
 using SocialMediaApp.EmailServiceLibrary;
 using SocialMediaApp.SharedModels;
+using System;
 
 namespace SocialMediaApp.MVC;
 
@@ -17,10 +19,14 @@ public class Program
         IConfiguration configuration = builder.Configuration;
         // Add services to the container.
         builder.Services.AddControllersWithViews();
+        builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultData"))
+            );
         builder.Services.AddDbContext<AppIdentityDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultAuthentication"))
-            );
+        );
 
+        
         builder.Services.AddIdentity<AppUser, IdentityRole>()
         .AddEntityFrameworkStores<AppIdentityDbContext>()
         .AddDefaultTokenProviders();
