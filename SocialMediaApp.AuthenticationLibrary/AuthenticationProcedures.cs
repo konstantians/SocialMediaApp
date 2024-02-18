@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SocialMediaApp.Authentication;
 using SocialMediaApp.SharedModels;
 
 namespace SocialMediaApp.AuthenticationLibrary;
@@ -8,17 +9,20 @@ public class AuthenticationProcedures : IAuthenticationProcedures
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
-    public AuthenticationProcedures(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+    private readonly AppIdentityDbContext _identityContext;
+
+    public AuthenticationProcedures(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, AppIdentityDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _identityContext = context;
     }
 
     public async Task<List<AppUser>> GetUsersAsync()
     {
         try
         {
-            return await _userManager.Users.ToListAsync();
+            return await _userManager.Users.Include(user => user.Friendships).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -278,6 +282,47 @@ public class AuthenticationProcedures : IAuthenticationProcedures
         {
             Console.WriteLine(ex);
             throw;
+        }
+    }
+
+    public async Task<bool> AddFriend(string userId, string friendId)
+    {
+        try
+        {
+            Friendship friendship = new () { FriendId = friendId, UserId = userId };
+            await _identityContext.Friendships.AddAsync(friendship);
+            
+            await _identityContext.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveFriend(string userId, string friendId)
+    {
+        try
+        {
+            AppUser foundUser = await FindByUserIdAsync(userId);
+            if (foundUser is null)
+                return false;
+
+            Friendship foundFriendship = foundUser.Friendships.FirstOrDefault(friendship => friendship.FriendId == friendId);
+            if (foundFriendship is null)
+                return false;
+
+            _identityContext.Friendships.Remove(foundFriendship);
+
+            await _identityContext.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return false;
         }
     }
 }

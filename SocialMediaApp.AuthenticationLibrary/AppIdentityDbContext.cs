@@ -31,7 +31,8 @@ public class AppIdentityDbContext : IdentityDbContext
         modelBuilder.Entity<AppUser>()
             .HasMany(user => user.Friendships)
             .WithOne(friendship => friendship.Friend)
-            .HasForeignKey(friendship => friendship.FriendId);
+            .HasForeignKey(friendship => friendship.FriendId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         base.OnModelCreating(modelBuilder);
     }

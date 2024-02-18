@@ -4,6 +4,7 @@ namespace SocialMediaApp.AuthenticationLibrary
 {
     public interface IAuthenticationProcedures
     {
+        Task<bool> AddFriend(string userId, string friendId);
         Task<bool> ChangeEmailAsync(string userId, string changeEmailToken, string newEmail);
         Task<(bool, string)> ChangePasswordAsync(AppUser appUser, string currentPassword, string newPassword);
         Task<bool> CheckIfUserIsLoggedIn();
@@ -18,6 +19,7 @@ namespace SocialMediaApp.AuthenticationLibrary
         Task<List<AppUser>> GetUsersAsync();
         Task LogOutUserAsync();
         Task<(string, string)> RegisterUserAsync(AppUser appUser, string password, bool isPersistent);
+        Task<bool> RemoveFriend(string userId, string friendId);
         Task<bool> ResetPasswordAsync(string userId, string resetPasswordToken, string newPassword);
         Task<bool> SignInUserAsync(string username, string password, bool isPersistent);
         Task<bool> UpdateUserAccountAsync(AppUser appUser);
