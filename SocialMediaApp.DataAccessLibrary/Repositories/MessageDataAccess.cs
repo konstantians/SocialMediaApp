@@ -15,7 +15,7 @@ public class MessageDataAccess : IMessageDataAccess
     {
         try
         {
-            return await _context.Messages.ToListAsync();
+            return await _context.Messages.Include(message => message.Notification).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -28,7 +28,9 @@ public class MessageDataAccess : IMessageDataAccess
     {
         try
         {
-            return await _context.Messages.FirstOrDefaultAsync(message => message.Id == id);
+            return await _context.Messages
+                .Include(message => message.Notification)
+                .FirstOrDefaultAsync(message => message.Id == id);
         }
         catch (Exception ex)
         {
