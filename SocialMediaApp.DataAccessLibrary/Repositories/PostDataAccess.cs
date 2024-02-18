@@ -3,7 +3,7 @@ using SocialMediaApp.SharedModels;
 
 namespace SocialMediaApp.DataAccessLibrary.Repositories;
 
-public class PostDataAccess
+public class PostDataAccess : IPostDataAccess
 {
     private readonly AppDbContext _context;
 
@@ -37,7 +37,6 @@ public class PostDataAccess
             throw;
         }
     }
-
 
     public async Task<Post> GetPostAsync(int id)
     {
@@ -76,9 +75,9 @@ public class PostDataAccess
             if (foundPost is null)
                 return false;
 
-            foundPost.SentAt = foundPost.SentAt;
-            foundPost.Title = foundPost.Title;
-            foundPost.Content = foundPost.Content;
+            foundPost.SentAt = post.SentAt;
+            foundPost.Title = post.Title;
+            foundPost.Content = post.Content;
             await _context.SaveChangesAsync();
 
             return true;
