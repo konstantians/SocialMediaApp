@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SocialMediaApp.AuthenticationLibrary\SocialMediaApp.AuthenticationLibrary.csproj" />
+    <ProjectReference Include="..\SocialMediaApp.DataAccessLibrary\SocialMediaApp.DataAccessLibrary.csproj" />
     <ProjectReference Include="..\SocialMediaApp.EmailServiceLibrary\SocialMediaApp.EmailServiceLibrary.csproj" />
     <ProjectReference Include="..\SocialMediaApp.SharedModels\SocialMediaApp.SharedModels.csproj" />
   </ItemGroup>

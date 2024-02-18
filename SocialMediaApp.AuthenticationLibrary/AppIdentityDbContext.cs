@@ -22,4 +22,17 @@ public class AppIdentityDbContext : IdentityDbContext
             options => options.EnableRetryOnFailure());
     }
     public DbSet<AppUser> AppUsers { get; set; }
+    public DbSet<Friendship> Friendships { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Friendship>().HasKey(friendship => friendship.Id);
+        
+        modelBuilder.Entity<AppUser>()
+            .HasMany(user => user.Friendships)
+            .WithOne(friendship => friendship.Friend)
+            .HasForeignKey(friendship => friendship.FriendId);
+
+        base.OnModelCreating(modelBuilder);
+    }
 }
