@@ -16,7 +16,7 @@ public class PostDataAccess : IPostDataAccess
     {
         try
         {
-            return await _context.Posts.ToListAsync();
+            return await _context.Posts.Include(post => post.PostVotes).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -29,7 +29,8 @@ public class PostDataAccess : IPostDataAccess
     {
         try
         {
-            return await _context.Posts.Where(post => post.UserId == userId).ToListAsync();
+            return await _context.Posts.Include(post => post.PostVotes).
+                Where(post => post.UserId == userId).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -42,7 +43,8 @@ public class PostDataAccess : IPostDataAccess
     {
         try
         {
-            return await _context.Posts.FirstOrDefaultAsync(post => post.Id == id);
+            return await _context.Posts.Include(post => post.PostVotes).
+                FirstOrDefaultAsync(post => post.Id == id);
         }
         catch (Exception ex)
         {
