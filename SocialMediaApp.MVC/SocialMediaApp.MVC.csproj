@@ -6,6 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\SocialMediaApp.AuthenticationLibrary\SocialMediaApp.AuthenticationLibrary.csproj" />
     <ProjectReference Include="..\SocialMediaApp.DataAccessLibrary\SocialMediaApp.DataAccessLibrary.csproj" />

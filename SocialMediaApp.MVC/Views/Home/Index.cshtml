@@ -1,43 +1,69 @@
-﻿@{
+﻿@inject IAuthenticationProcedures _authenticationProcedures
+@model IndexViewModel
+
+@{
     ViewData["Title"] = "Home Page";
     bool successfulAccountActivation = (bool)ViewData["SuccessfulAccountActivation"]!;
     bool failedAccountActivation = (bool)ViewData["FailedAccountActivation"]!;
     bool successfulSignIn = (bool)ViewData["SuccessfulSignIn"]!;
     bool successfulPasswordReset = (bool)ViewData["SuccessfulPasswordReset"]!;
     bool failedPasswordReset = (bool)ViewData["FailedPasswordReset"]!;
+    bool successfulPostCreation = (bool)ViewData["SuccessfulPostCreation"]!;
+    bool failedPostCreation = (bool)ViewData["FailedPostCreation"]!;
+    bool successfulPostUpdate = (bool)ViewData["SuccessfulPostUpdate"]!;
+    bool failedPostUpdate = (bool)ViewData["FailedPostUpdate"]!;
+    bool successfulPostDeletion = (bool)ViewData["SuccessfulPostDeletion"]!;
+    bool failedPostDeletion = (bool)ViewData["FailedPostDeletion"]!;
+
+    AppUser currentUser = await _authenticationProcedures.GetCurrentUserAsync();
+    bool isUserLoggedIn = currentUser is not null ? true : false;
+    string? currentUserId = null;
+    if (currentUser is not null)
+        currentUserId = currentUser.Id;
 }
 
-@if (successfulAccountActivation || successfulSignIn || successfulPasswordReset)
+@if (successfulAccountActivation || successfulSignIn || successfulPasswordReset || 
+    successfulPostCreation || successfulPostUpdate || successfulPostDeletion)
 {
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
         </symbol>
     </svg>
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
-                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill" /></svg>
-                    @if (successfulAccountActivation)
-                    {
-                        <div>You have successfully activated your account!</div>
-                    }
-                    else if (successfulSignIn)
-                    {
-                        <div>You have successfully signed in!</div>
-                    }
-                    else if (successfulPasswordReset)
-                    {
-                        <div>You have successfully reset your password!</div>
-                    }
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill" /></svg>
+                @if (successfulAccountActivation)
+                {
+                    <div>You have successfully activated your account!</div>
+                }
+                else if (successfulSignIn)
+                {
+                    <div>You have successfully signed in!</div>
+                }
+                else if (successfulPasswordReset)
+                {
+                    <div>You have successfully reset your password!</div>
+                }
+                else if (successfulPostCreation)
+                {
+                    <div>Your post has successfully been created!</div>
+                }
+                else if (successfulPostUpdate)
+                {
+                    <div>Your post has successfully been updated!</div>
+                }
+                else if (successfulPostDeletion)
+                {
+                    <div>Your post has successfully been deleted!</div>
+                }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     </div>
 }
-else if (failedAccountActivation)
+else if (failedAccountActivation || failedPostCreation || failedPostUpdate || failedPostDeletion)
 {
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
         <symbol id="exclamation-triangle-fill" viewBox="0 0 16 16">
@@ -61,11 +87,320 @@ else if (failedAccountActivation)
                 Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
             </div>
         }
+        @if (failedPostCreation)
+        {
+            <div>
+                Unfortunately something went wrong and your post could not be created. <br>
+                Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
+            </div>
+        }
+        @if (failedPostUpdate)
+        {
+            <div>
+                Unfortunately something went wrong and your post could not be updated. <br>
+                Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
+            </div>
+        }
+        @if (failedPostDeletion)
+        {
+            <div>
+                Unfortunately something went wrong and your post could not be deleted. <br>
+                Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
+            </div>
+        }
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@if (isUserLoggedIn)
+{
+    <div class="row">
+        <div class="offset-4 col-4">
+            <h1 class="h1 text-center">Recent Posts</h1>
+        </div>
+        <div class="col-4">
+            <div class="text-end">
+                <a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPostModal">
+                    Add Post <i class="fa-solid fa-plus"></i>
+                 </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <h1 class="h1 text-center">Recent Posts</h1>
+}
+
+<div class="row">
+    @{
+        int count = 0;
+        int team = 0;
+    }
+    @foreach (Post post in Model.Posts)
+    {
+        int positiveCount = post.PostVotes.Where(postVote => postVote.IsPositive).Count();
+        int negativeCount = post.PostVotes.Where(postVote => !postVote.IsPositive).Count();
+        string teamCount = $"team-{team}";
+        string isHidden = team > 0 ? "none" : "block";
+        <div class="offset-1 col-10 @teamCount" style="display:@isHidden">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@post.Title</h4>
+                            <h5 class="card-subtitle text-muted">From: @post.AppUser!.UserName</h5>
+                        </div>
+                        <div></div>
+                        <div>
+                            <p class="text-bold text-muted" style="font-size:18px;">@post.SentAt.ToString("dd/MMM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@post.Content</p>
+                </div>
+                <div class="card-footer">
+                    @{
+                        string btnPositiveCountClass = post.PostVotes.Any(postVote => postVote.UserId == currentUserId && postVote.IsPositive) ?
+                        "btn-primary" : "btn-outline-primary";
+                        string btnNegativeCountClass = post.PostVotes.Any(postVote => postVote.UserId == currentUserId && !postVote.IsPositive) ?
+                        "btn-danger" : "btn-outline-danger";
+                    }
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a class="btn @btnPositiveCountClass me-2" style="min-width:100px;" id="@post.Id-positiveCount" 
+                                onclick="AddVote(@post.Id, true, '@isUserLoggedIn')">
+                                @positiveCount Likes <i class="fa-regular fa-thumbs-up"></i>
+                            </a>
+                            <a class="btn @btnNegativeCountClass style="min-width:100px;" id="@post.Id-negativeCount"
+                                onclick="AddVote(@post.Id, false, '@isUserLoggedIn')">
+                                @negativeCount Dislikes <i class="fa-regular fa-thumbs-down"></i>
+                            </a>
+                        </div>
+                        @if(currentUserId == post.UserId)
+                        {
+                            <div>
+                                <a class="btn btn-primary me-2" style="min-width:100px;"
+                                    data-bs-toggle="modal" data-bs-target="#editPostModal-@post.Id">
+                                    Edit <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <a class="btn btn-danger" style="min-width:100px;"
+                                    data-bs-toggle="modal" data-bs-target="#deletePostModal-@post.Id">
+                                    Delete <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        count++;
+        if(count%3 == 0 && post != Model.Posts.Last())
+        {
+            <div class="text-center" id="buttonTeam-@team" style="display:@isHidden">
+                <a class="btn btn-primary" onclick="ShowMore(@team + 1)">Show More</a>
+            </div>
+            team += 1;
+            count = 0;
+        }
+    }
 </div>
+
+
+<div class="modal fade" id="addPostModal" tabindex="-1">
+    <form id="addPostForm" method="post" asp-controller="Home" asp-action="AddPost">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPostTitle">Add Post Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="text-align: left;">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label asp-for="CreatePostModel.Title" class="form-label">Title</label>
+                                <input asp-for="CreatePostModel.Title" type="text" class="form-control">
+                                <span asp-validation-for="CreatePostModel.Title" class="text-danger" />
+                            </div>
+                            <div class=" col-12 mb-3">
+                                <label asp-for="CreatePostModel.Content" class="form-label">Content</label>
+                                <textarea asp-for="CreatePostModel.Content" class="form-control" rows="4"></textarea>
+                                <span asp-validation-for="CreatePostModel.Content" class="text-danger" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if(currentUserId is not null)
+{
+    @foreach (Post post in Model.Posts.Where(post => post.UserId == currentUserId))
+    {
+        <div class="modal fade" id="editPostModal-@post.Id" tabindex="-1">
+            <form id="editPostForm-@post.Id" method="post" asp-controller="Home" asp-action="EditPost">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editPostTitle-@post.Id">Edit Post Form</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="text-align: left;">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="EditPostModel.Title" class="form-label">Title</label>
+                                        <input asp-for="EditPostModel.Title" value="@post.Title" type="text" class="form-control">
+                                        <span asp-validation-for="EditPostModel.Title" class="text-danger" />
+                                    </div>
+                                    <div class=" col-12 mb-3">
+                                        <label asp-for="EditPostModel.Content" class="form-label">Content</label>
+                                        <textarea asp-for="EditPostModel.Content" class="form-control" rows="4">@post.Content</textarea>
+                                        <span asp-validation-for="EditPostModel.Content" class="text-danger" />
+                                    </div>
+                                    <input asp-for="EditPostModel.PostId" value="@post.Id" hidden/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal fade" id="deletePostModal-@post.Id" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deletePostModalTitle-@post.Id">Delete Post Dialog</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        Are you sure you want to delete this post?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-action="DeletePost" asp-controller="Home">
+                            <input name="postId" value="@post.Id" hidden />
+                            <button type="submit" class="btn btn-danger ms-1">Confirm Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/PostVoteHub")
+        .configureLogging(signalR.LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
+
+        connection.start().then(function () {
+            console.log("SignalR Connection Established");
+        }).catch(function (err) {
+            console.error("Error establishing SignalR connection: " + err);
+        });
+
+        function ShowMore(team){
+            let cards = document.getElementsByClassName('team-' + team);
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].style.display = "block";
+            }
+            let currentButtomTeam = team - 1;
+            let button = document.getElementById('buttonTeam-' + currentButtomTeam);
+            button.style.display = "none";
+            
+            let buttonOfNextTeam = document.getElementById('buttonTeam-' + team);
+            if (buttonOfNextTeam) {
+                buttonOfNextTeam.style.display = "block";
+            }
+        }
+
+        function AddVote(postId, isPositive, isUserLoggedIn) {
+            if(isUserLoggedIn == 'False'){
+                alert("You need to be logged in to like or dislike the post.");
+                return;
+            }
+
+            connection.invoke("UpdatePostVote", postId, isPositive).then(function (result) {
+                let btnPositiveCount = document.getElementById(postId + "-positiveCount");
+                let btnNegativeCount = document.getElementById(postId + "-negativeCount");
+
+                if (!result) {
+
+                    alert("It seems that the post you are trying to vote on no longer exists. " +
+                        "You could refresh your page to get the latest feed.");
+
+                    btnPositiveCount.classList.remove("btn-primary");
+                    btnPositiveCount.classList.add("btn-outline-primary");
+
+                    btnNegativeCount.classList.remove("btn-danger");
+                    btnNegativeCount.classList.add("btn-outline-danger");
+                    
+                    return;
+                }
+
+                // Update the button class based on the vote state
+                if (isPositive && btnPositiveCount.classList.contains("btn-primary")) {
+                    btnPositiveCount.classList.add("btn-outline-primary");
+                    btnPositiveCount.classList.remove("btn-primary");
+                } 
+                else if (isPositive && btnNegativeCount.classList.contains("btn-danger")) {
+                    btnPositiveCount.classList.add("btn-primary");
+                    btnPositiveCount.classList.remove("btn-outline-primary");
+                    btnNegativeCount.classList.remove("btn-danger");
+                    btnNegativeCount.classList.add("btn-outline-danger");
+                }
+                else if(isPositive){
+                    btnPositiveCount.classList.add("btn-primary");
+                    btnPositiveCount.classList.remove("btn-outline-primary");
+                }
+                else if (!isPositive && btnNegativeCount.classList.contains("btn-danger")) {
+                    btnNegativeCount.classList.add("btn-outline-danger");
+                    btnNegativeCount.classList.remove("btn-danger");                    
+                }
+                else if (!isPositive && btnPositiveCount.classList.contains("btn-primary")) {
+                    btnNegativeCount.classList.add("btn-danger");
+                    btnNegativeCount.classList.remove("btn-outline-danger");
+                    btnPositiveCount.classList.remove("btn-primary");
+                    btnPositiveCount.classList.add("btn-outline-primary");
+                }
+                else if(!isPositive){
+                    btnNegativeCount.classList.add("btn-danger");
+                    btnNegativeCount.classList.remove("btn-outline-danger");
+                }
+
+                console.log("Post votes update sent successfully.");
+            }).catch(function (err) {
+                console.error("Error updating post votes: " + err);
+            });
+        }
+
+        connection.on("PostVotesChanged", function (postId, positiveCount, negativeCount) {
+            let fullPositiveId = postId + "-positiveCount";
+            let fullNegativeId = postId + "-negativeCount";
+            document.getElementById(fullPositiveId).innerHTML = positiveCount + " Likes <i class='fa-regular fa-thumbs-up'></i>";
+            document.getElementById(fullNegativeId).innerHTML = negativeCount + " Dislikes <i class='fa-regular fa-thumbs-down'></i>";
+        });
+
+    </script>
+}

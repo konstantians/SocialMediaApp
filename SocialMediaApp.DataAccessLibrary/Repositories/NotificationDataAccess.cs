@@ -41,7 +41,7 @@ public class NotificationDataAccess : INotificationDataAccess
             throw;
         }
     }
-
+    
     public async Task<Notification> GetNotificationAsync(int id)
     {
         try
@@ -92,5 +92,4 @@ public class NotificationDataAccess : INotificationDataAccess
             return false;
         }
     }
-
 }

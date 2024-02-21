@@ -25,6 +25,23 @@ public class PostDataAccess : IPostDataAccess
         }
     }
 
+    public async Task<IEnumerable<Post>> GetPostsAsync(int amount)
+    {
+        try
+        {
+            return await _context.Posts
+            .OrderByDescending(post => post.SentAt)
+            .Include(post => post.PostVotes)
+            .Take(amount)
+            .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<Post>> GetPostsOfUserAsync(string userId)
     {
         try
@@ -146,7 +163,7 @@ public class PostDataAccess : IPostDataAccess
         }
     }
 
-    public async Task<int> CreatePostVote(PostVote postVote)
+    public async Task<int> CreatePostVoteAsync(PostVote postVote)
     {
         try
         {
@@ -162,7 +179,7 @@ public class PostDataAccess : IPostDataAccess
         }
     }
 
-    public async Task<bool> UpdatePostVote(int postVoteId, PostVote postVote)
+    public async Task<bool> UpdatePostVoteAsync(int postVoteId, PostVote postVote)
     {
         try
         {
@@ -183,7 +200,7 @@ public class PostDataAccess : IPostDataAccess
         }
     }
 
-    public async Task<bool> DeletePostVote(int id)
+    public async Task<bool> DeletePostVoteAsync(int id)
     {
         try
         {
