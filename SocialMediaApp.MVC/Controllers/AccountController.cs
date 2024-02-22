@@ -210,7 +210,10 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> EditAccount(bool duplicateUsernameError, bool duplicateEmailError,
         bool basicInformationChangeError, bool basicInformationChangeSuccess,
-        bool passwordChangeSuccess, bool passwordChangeError, bool passwordMismatchError)
+        bool passwordChangeSuccess, bool passwordChangeError, bool passwordMismatchError,
+        bool userWasNotFound, bool friendNotificationSentSuccessfully, bool friendNotificationSentUnsuccessfully, 
+        bool userAlreadyFriend, bool selfFriendRequest,
+        bool friendRemovalSuccess, bool friendRemovalFailure)
     {
         //AppUser appUser = await _userHelperMethods.GetUserWithBankCardsAndTickets();
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
@@ -230,8 +233,18 @@ public class AccountController : Controller
             OldEmail = appUser.Email
         };
 
+        List<AppUser> userFriends = new();
+        foreach (Friendship friendship in appUser.Friendships)
+        {
+            if(friendship.UserId != appUser.Id)
+                userFriends.Add(await _authenticationProcedures.FindByUserIdAsync(friendship.UserId));
+            else if(friendship.FriendId != appUser.Id)
+                userFriends.Add(await _authenticationProcedures.FindByUserIdAsync(friendship.FriendId));
+        }
+
         EditAccountModel editAccountModel = new()
         {
+            UsersFriends = userFriends,
             AccountBasicSettingsViewModel = accountBasicSettingsViewModel,
             ChangePasswordModel = changePasswordModel,
             ChangeEmailModel = resetEmailModel
@@ -247,6 +260,14 @@ public class AccountController : Controller
         ViewData["PasswordChangeError"] = passwordChangeError;
         ViewData["PasswordMismatchError"] = passwordMismatchError;
 
+        ViewData["UserWasNotFound"] = userWasNotFound;
+        ViewData["FriendNotificationSentSuccessfully"] = friendNotificationSentSuccessfully;
+        ViewData["FriendNotificationSentUnsuccessfully"] = friendNotificationSentUnsuccessfully;
+        ViewData["UserAlreadyFriend"] = userAlreadyFriend;
+        ViewData["SelfFriendRequest"] = selfFriendRequest;
+
+        ViewData["FriendRemovalSuccess"] = friendRemovalSuccess;
+        ViewData["FriendRemovalFailure"] = friendRemovalFailure;
         return View(editAccountModel);
     }
 
@@ -347,6 +368,47 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home", new { FailedAccountActivation = true });
         }
         return RedirectToAction("Index", "Home", new { SuccessfulAccountActivation = true });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> AddFriend(string username, string email)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        AppUser friend;
+        if (username is not null)
+            friend = await _authenticationProcedures.FindByUsernameAsync(username);
+        else
+            friend = await _authenticationProcedures.FindByEmailAsync(email);
+
+        if (friend is null)
+            return RedirectToAction("EditAccount", "Account", new { userWasNotFound = true });
+
+        if (friend.Id == appUser.Id)
+            return RedirectToAction("EditAccount", "Account", new { selfFriendRequest = true });
+
+        if (appUser.Friendships.Any(friendship => friendship.UserId == friend.Id || friendship.FriendId == friend.Id))
+            return RedirectToAction("EditAccount", "Account", new { userAlreadyFriend = true});
+        //TODO do notifications here
+        bool result = await _authenticationProcedures.AddFriend(appUser.Id, friend.Id);
+        if(!result)
+            return RedirectToAction("EditAccount", "Account", new { friendNotificationSentUnsuccessfully = true });
+
+        return RedirectToAction("EditAccount", "Account", new { friendNotificationSentSuccessfully = true});
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> RemoveFriend(string friendId)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        bool result = await _authenticationProcedures.RemoveFriend(appUser.Id, friendId);
+
+        //TODO send notification here, maybe
+        if (!result)
+            return RedirectToAction("EditAccount", "Account", new { friendRemovalFailure = true });
+
+        return RedirectToAction("EditAccount", "Account", new { friendRemovalSuccess = true });
     }
 
     [HttpPost]

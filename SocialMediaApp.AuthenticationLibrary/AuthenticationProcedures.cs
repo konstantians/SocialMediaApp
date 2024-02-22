@@ -35,7 +35,8 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            return await _userManager.GetUserAsync(_signInManager.Context.User);
+            AppUser currentUser = await _userManager.GetUserAsync(_signInManager.Context.User);
+            return AddFriendshipsToUser(currentUser);
         }
         catch (Exception ex)
         {
@@ -48,7 +49,8 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            return await _userManager.FindByIdAsync(userId);
+            AppUser appUser = await _userManager.FindByIdAsync(userId);
+            return AddFriendshipsToUser(appUser);
         }
         catch (Exception ex)
         {
@@ -61,7 +63,8 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            return await _userManager.FindByNameAsync(username);
+            AppUser appUser = await _userManager.FindByNameAsync(username);
+            return AddFriendshipsToUser(appUser);
         }
         catch (Exception ex)
         {
@@ -74,13 +77,25 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            return await _userManager.FindByEmailAsync(email);
+            AppUser appUser = await _userManager.FindByEmailAsync(email);
+            return AddFriendshipsToUser(appUser);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
             throw;
         }
+    }
+
+    private AppUser AddFriendshipsToUser(AppUser appUser)
+    {
+        if (appUser == null)
+            return null;
+
+        appUser.Friendships = _identityContext.Friendships
+        .Where(friend => friend.UserId == appUser.Id || friend.FriendId == appUser.Id)
+        .ToList();
+        return appUser;
     }
 
     public async Task<(string, string)> RegisterUserAsync(AppUser appUser, string password,
@@ -289,10 +304,14 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            Friendship friendship = new () { FriendId = friendId, UserId = userId };
+            if(userId == friendId)
+                return false;
+
+            Friendship friendship = new () { UserId = userId, FriendId = friendId};
             await _identityContext.Friendships.AddAsync(friendship);
-            
             await _identityContext.SaveChangesAsync();
+
+            _identityContext.Entry(friendship).State = EntityState.Detached;
             return true;
         }
         catch (Exception ex)
