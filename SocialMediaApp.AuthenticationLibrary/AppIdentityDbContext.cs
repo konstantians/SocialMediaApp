@@ -27,12 +27,12 @@ public class AppIdentityDbContext : IdentityDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Friendship>().HasKey(friendship => friendship.Id);
-        
-        modelBuilder.Entity<AppUser>()
+
+        /*modelBuilder.Entity<AppUser>()
             .HasMany(user => user.Friendships)
             .WithOne(friendship => friendship.Friend)
             .HasForeignKey(friendship => friendship.FriendId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade);*/
 
         base.OnModelCreating(modelBuilder);
     }
