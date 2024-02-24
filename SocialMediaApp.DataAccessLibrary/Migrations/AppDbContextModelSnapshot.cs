@@ -102,7 +102,7 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MessageId")
+                    b.Property<int?>("MessageId")
                         .HasColumnType("int");
 
                     b.Property<bool>("NewFriendRequest")
@@ -118,7 +118,8 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MessageId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[MessageId] IS NOT NULL");
 
                     b.ToTable("Notifications");
                 });

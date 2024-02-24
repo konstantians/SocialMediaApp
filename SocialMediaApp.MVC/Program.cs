@@ -90,6 +90,7 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.MapHub<PostVoteHub>("/PostVoteHub");
+        app.MapHub<NotificationHub>("/NotificationHub");
         app.Run();
     }
 }

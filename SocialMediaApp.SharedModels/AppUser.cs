@@ -13,4 +13,6 @@ public class AppUser : IdentityUser
     public List<Notification> Notifications { get; set; } = new List<Notification>();
     [NotMapped]
     public List<Post> Posts { get; set; } = new List<Post>();
+    public string? SignalRConnectionId { get; set; }
+
 }

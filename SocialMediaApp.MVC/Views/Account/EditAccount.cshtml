@@ -9,23 +9,27 @@
     bool passwordChangeError = (bool)ViewData["PasswordChangeError"]!;
     bool passwordChangeSuccess = (bool)ViewData["PasswordChangeSuccess"]!;
     bool duplicateEmailError = (bool)ViewData["DuplicateEmailError"]!;
-    bool friendNotificationSentSuccessfully = (bool)ViewData["FriendNotificationSentSuccessfully"]!;
-    bool friendNotificationSentUnsuccessfully = (bool)ViewData["FriendNotificationSentUnsuccessfully"]!;
-    bool userWasNotFound = (bool)ViewData["UserWasNotFound"]!;
-    bool friendRemovalSuccess = (bool)ViewData["FriendRemovalSuccess"]!;
     bool friendRemovalFailure = (bool)ViewData["FriendRemovalFailure"]!;
-    bool userAlreadyFriend = (bool)ViewData["UserAlreadyFriend"]!;
-    bool selfFriendRequest = (bool)ViewData["SelfFriendRequest"]!;
+    bool friendRemovalSuccess = (bool)ViewData["FriendRemovalSuccess"]!;
 }
 
-@if (duplicateUsernameError || basicInformationChangeError || passwordChangeError || passwordMismatchError || duplicateEmailError || 
-  userWasNotFound || friendNotificationSentUnsuccessfully || friendRemovalFailure || userAlreadyFriend || selfFriendRequest)
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+    </symbol>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+    </symbol>
+</svg>
+
+<div id="alertsLocation">
+
+</div>
+
+@if (duplicateUsernameError || basicInformationChangeError || passwordChangeError || passwordMismatchError || duplicateEmailError || friendRemovalFailure)
 {
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-        <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
-        </symbol>
-    </svg>
     <div class="row">
         <div class="col-12">
             <div class="alert alert-danger d-flex align-items-center alert-dismissible fade show" role="alert">
@@ -59,27 +63,9 @@
                 {
                     <div>There is another user with the given email.</div>
                 }
-                else if(userWasNotFound){
-                    <div>The user was not found.</div>
-                }
-                else if(userAlreadyFriend){
-                    <div>That user is already in your friends list.</div>
-                }
-                else if (selfFriendRequest)
-                {
-                    <div>You can not send a friend request to yourself.</div>
-                }
-                else if (friendNotificationSentUnsuccessfully)
-                {
-                    <div>
-                        Unfortunately a friend notification could not be sent to the user.
-                        Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
-                    </div>
-                }
                 else if (friendRemovalFailure)
                 {
-                    <div>
-                        Unfortunately the chosen user could not be removed from your friend list.
+                    <div>Unfortunately the user could not be removed from your friend list.
                         Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
                     </div>
                 }
@@ -88,13 +74,8 @@
         </div>
     </div>
 }
-else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotificationSentSuccessfully || friendRemovalSuccess)
+else if (basicInformationChangeSuccess || passwordChangeSuccess || friendRemovalSuccess)
 {
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-        <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
-        </symbol>
-    </svg>
     <div class="row">
         <div class="col-12">
             <div class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
@@ -106,13 +87,8 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
                 else if(passwordChangeSuccess){
                     <div>Your account password has been updated successfully!</div>
                 }
-                else if (friendNotificationSentSuccessfully)
-                {
-                    <div>A friend notification has successfully been sent to the chosen user account!</div>
-                }
-                else if(friendRemovalSuccess)
-                {
-                    <div>The chosen user has successfully been removed from your friend list!</div>
+                else if (friendRemovalSuccess){
+                    <div>The user has been removed from your friend list successfully!. </div>
                 }
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -120,7 +96,7 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
     </div>
 }
 
-<div method="post" class="shadow p-4" style="background-color:white;">
+<div class="shadow p-4" style="background-color:white;">
     <h2 class="text-center mb-4">User Account</h2>
     <div class="row">
         <form class="col-4" asp-controller="Account" asp-action="ChangeBasicAccountSettings">
@@ -199,6 +175,18 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
                     <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFriendModal"><i class="fa-solid fa-user-plus"></i></a>
                 </div>
             </div>
+            @if (Model.UsersFriends.Count == 0)
+            {
+                <div class="alert alert-info" role="alert" id="noComments" style="display:block;">
+                    <strong>No friends!</strong> There are friends in your friend list.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert" id="noComments" style="display:none;">
+                    <strong>No friends!</strong> There are friends in your friend list.
+                </div>
+            }
             <ul class="list-group">
                 @foreach (AppUser appUser in Model.UsersFriends)
                 {
@@ -336,24 +324,27 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
                     </div>
                 </div>
 
-                <form asp-controller="Account" asp-action="AddFriend" id="addFriendFormUsername" class="mt-4 mb-3">
+                <div id="addFriendFormUsername" class="mt-4 mb-3">
                     <div class="form-group mb-2">
                         <input class="form-label" name="email" id="hiddenEmail" type="hidden" value="" />
                         <label for="username" class="control-label"><i class="fa-solid fa-user me-2"></i>Username</label>
                         <input type="text" class="form-control" id="username" name="username" placeholder="Enter The Username Of The Account" required />
                     </div>
-                </form>
-                <form asp-controller="Account" asp-action="AddFriend" id="addFriendFormEmail" class="mt-4 mb-3" style="display:none;">
+                </div>
+                <div id="addFriendFormEmail" class="mt-4 mb-3" style="display:none;">
                     <div class="form-group ">
                         <input class="form-label" name="username" id="hiddenUsername" type="hidden" value="" />
                         <label for="email" class="control-label"><i class="fa-solid fa-envelope me-2"></i>Email</label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="Enter The Email Of The Account" required />
                     </div>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary" form="addFriendFormUsername" id="submitButton" onclick="clearOtherForm()">Confirm</button>
+                <button type="submit" class="btn btn-primary" form="addFriendFormUsername" id="submitButton"
+                        onclick="clearOtherForm(); sendFriendNotification(); $('#addFriendModal').modal('hide');">
+                    Confirm
+                </button>
             </div>
         </div>
     </div>
@@ -367,7 +358,22 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
     }
 
     <script>
-        //edit button functionality
+        function sendFriendNotification(){
+            let username = document.getElementById('username').value;
+            let email = document.getElementById('email').value;
+
+            connection.invoke("SendFriendNotification", username, email).then(function (returnedMessage) {
+                let parts = returnedMessage.split('|');
+                let message = parts[0];
+                let alertType = parts[1];
+                
+                createAlert(message, alertType);
+            }).catch(function (err) {
+                console.error("Error setting connection with other user: " + err);
+            });
+        }
+
+        // Edit button functionality
         function toggleInputField(inputId, buttonId) {
             let inputField = document.getElementById(inputId);
             let button = document.getElementById(buttonId);
@@ -382,7 +388,7 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendNotific
                 }
             }
         }
-s
+
         function showForm(method) {
             const formUsername = document.getElementById('addFriendFormUsername');
             const formEmail = document.getElementById('addFriendFormEmail');
@@ -397,7 +403,7 @@ s
             }
         }
 
-        //clears the other form show that there will not be any conflicts
+        // Clears the other form show that there will not be any conflicts
         function clearOtherForm() {
             const formUsername = document.getElementById('addFriendFormUsername');
             if (formUsername.style.display === 'block') {
@@ -407,6 +413,42 @@ s
                 document.getElementById('hiddenUsername').value = "";
             }
         }
+
+        function createAlert(message, alertType) {
+            // Create the alert's elements
+            const alertDiv = document.createElement('div');
+            alertDiv.classList.add('alert', `alert-${alertType}`, 'd-flex', 'align-items-center', 'alert-dismissible', 'fade', 'show');
+            alertDiv.role = 'alert';
+
+            const svgIcon = document.createElement('svg');
+            svgIcon.classList.add('bi', 'flex-shrink-0', 'me-2');
+            svgIcon.width = 24;
+            svgIcon.height = 24;
+            svgIcon.setAttribute('role', 'img');
+            svgIcon.setAttribute('aria-label', 'Danger:');
+            const useElement = document.createElement('use');
+            useElement.setAttribute('xlink:href', '#exclamation-triangle-fill');
+            svgIcon.appendChild(useElement);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+
+            const closeButton = document.createElement('button');
+            closeButton.classList.add('btn-close');
+            closeButton.setAttribute('type', 'button');
+            closeButton.setAttribute('data-bs-dismiss', 'alert');
+            closeButton.setAttribute('aria-label', 'Close');
+
+            // Append elements to the alert
+            alertDiv.appendChild(svgIcon);
+            alertDiv.appendChild(messageDiv);
+            alertDiv.appendChild(closeButton);
+
+            // Append elemnt to the container
+            document.getElementById('alertsLocation').appendChild(alertDiv);
+        }
+
+
     </script>
 }
 

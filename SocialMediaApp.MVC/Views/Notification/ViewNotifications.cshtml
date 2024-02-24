@@ -1,0 +1,285 @@
+﻿@model List<Notification>
+
+@{
+    ViewData["Title"] = "View Notifications";
+    bool successfulNotificationDeletion = (bool)ViewData["SuccessfulNotificationDeletion"];
+    bool failedNotificationDeletion = (bool)ViewData["FailedNotificationDeletion"];
+    int count = 0;
+}
+
+<div id="alertsLocation">
+
+</div>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+    </symbol>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="check-circle-fill" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+    </symbol>
+</svg>
+
+@if (failedNotificationDeletion)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger d-flex align-items-center alert-dismissible fade show" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill" /></svg>
+                @if (failedNotificationDeletion)
+                {
+                    <div>
+                        Unfortunately the notification was could not be deleted.
+                        Please try again or contact us through our email kinnaskonstantinos0@gmail.com.
+                    </div>
+                }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+else if (successfulNotificationDeletion)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill" /></svg>
+                @if (successfulNotificationDeletion)
+                {
+                    <div>The notification was deleted successfully!</div>
+                }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="offset-1 col-10">
+        <div class="shadow p-4" style="background-color:white;">
+            <h2 class="text-center mb-4">Notifications</h2>
+            <div class="row">
+                <div class="col-6">
+                    <h4 class="text-center">Friends Notifications</h4>
+                    <div class="overflow-auto" style="max-height: 450px;">
+                        <ul class="list-group">
+                            @foreach (Notification notification in Model)
+                            {
+                                @if (notification.Message is not null)
+                                    continue;
+
+                                <li class="list-group-item d-flex justify-content-between" id="friendInvitationLi-@count">
+                                    @{
+                                        string type = "";
+                                        if (notification.NewFriendRequest)
+                                            type = "New Friend Request";
+                                        else if (notification.FriendRequestAccepted)
+                                            type = "Friend Request Accepted";
+                                        else if (notification.FriendRequestRejected)
+                                            type = "Friend Request Rejected";
+                                    }
+
+                                    <div>
+                                        Sent At: <span style="font-weight:bold">@notification.SentAt</span><br>
+                                        From User: <span style="font-weight:bold">@notification.Sender.UserName</span><br>
+                                        Notification Type: <span style="font-weight:bold">@type</span><br>
+                                    </div>
+                                    @if (notification.NewFriendRequest)
+                                    {
+                                        <div class="d-flex justify-content-end align-items-start">
+                                            <button type="submit" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#acceptFriendInvitationModal-@count">
+                                                <i class="fa-regular fa-circle-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteFriendInvitationModal-@count">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div>
+                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteNotificationModal-@count">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                            <div class="modal fade" id="deleteNotificationModal-@count" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteNotificationModalTitle-@count">Delete Notification</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body" style="text-align: left;">
+                                                            Are you sure you want to remove this notification?
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                                                            <form asp-action="DeleteNotification" asp-controller="Notification">
+                                                                <input name="notificationId" value="@notification.Id" hidden />
+                                                                <button type="submit" class="btn btn-danger ms-1">Confirm</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </li>
+
+                                count++;
+                            }
+                        </ul>
+
+                    </div>
+                    @if (count == 0)
+                    {
+                        <div class="alert alert-info" role="alert" id="noComments" style="display:block;">
+                            <strong>No notifications!</strong> There are no notifications yet.
+                        </div>
+                    }
+                    else{
+                        <div class="alert alert-info" role="alert" id="noComments" style="display:none;">
+                            <strong>No notifications!</strong> There are no notifications yet.
+                        </div>
+                    }
+                </div>
+                <div class="col-6">
+                    <h4 class="text-center">Messages Notifications</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    count = 0;
+}
+@foreach(Notification notification in Model)
+{
+    @if (notification.Message is not null)
+        continue;
+
+    @if (notification.NewFriendRequest)
+    {
+        <div class="modal fade" id="acceptFriendInvitationModal-@count" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="acceptFriendInvitationModalTitle-@count">Accept Friend Invitation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        Are you sure you want to accept this friendship invitation?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary ms-1" 
+                        onclick="acceptFriendNotification(@notification.Id,'@notification.FromUserId',@count);$('#acceptFriendInvitationModal-@count').modal('hide');">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteFriendInvitationModal-@count" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteFriendInvitationModalTitle-@count">Reject Friend Invitation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        Are you sure you want to reject this friendship invitation?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger ms-1" 
+                        onclick="rejectFriendNotification(@notification.Id,'@notification.FromUserId',@count);$('#deleteFriendInvitationModal-@count').modal('hide');">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    count++;
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        function rejectFriendNotification(notificationId, friendId, count){
+            connection.invoke("RejectFriendInvitation", notificationId, friendId).then(function (returnedMessage) {
+                commonPart(returnedMessage, count);
+            }).catch(function (err) {
+                console.error("Error setting connection with other user: " + err);
+            });
+        }
+
+        function acceptFriendNotification(notificationId, friendId, count){
+            connection.invoke("AcceptFriendInvitation", notificationId, friendId).then(function (returnedMessage) {
+                commonPart(returnedMessage, count);
+            }).catch(function (err) {
+                console.error("Error setting connection with other user: " + err);
+            });
+        }
+
+        function commonPart(returnedMessage, count) {
+            let parts = returnedMessage.split('|');
+            let message = parts[0];
+            let alertType = parts[1];
+            let notificationCount = parts[2];
+                
+            createAlert(message, alertType);
+            if (alertType == 'success') {
+                document.getElementById('friendInvitationLi-' + count).remove();
+                console.log(notificationCount);
+                if (notificationCount === '0') {
+                    document.getElementById('noComments').style.display = 'block';
+                }
+            }
+        }
+
+        function createAlert(message, alertType) {
+            // Create the alert's elements
+            const alertDiv = document.createElement('div');
+            alertDiv.classList.add('alert', `alert-${alertType}`, 'd-flex', 'align-items-center', 'alert-dismissible', 'fade', 'show');
+            alertDiv.role = 'alert';
+
+            const svgIcon = document.createElement('svg');
+            svgIcon.classList.add('bi', 'flex-shrink-0', 'me-2');
+            svgIcon.width = 24;
+            svgIcon.height = 24;
+            svgIcon.setAttribute('role', 'img');
+            svgIcon.setAttribute('aria-label', 'Danger:');
+            const useElement = document.createElement('use');
+            useElement.setAttribute('xlink:href', '#exclamation-triangle-fill');
+            svgIcon.appendChild(useElement);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+
+            const closeButton = document.createElement('button');
+            closeButton.classList.add('btn-close');
+            closeButton.setAttribute('type', 'button');
+            closeButton.setAttribute('data-bs-dismiss', 'alert');
+            closeButton.setAttribute('aria-label', 'Close');
+
+            // Append elements to the alert
+            alertDiv.appendChild(svgIcon);
+            alertDiv.appendChild(messageDiv);
+            alertDiv.appendChild(closeButton);
+
+            // Append elemnt to the container
+            document.getElementById('alertsLocation').appendChild(alertDiv);
+        }
+
+    </script>
+}
+

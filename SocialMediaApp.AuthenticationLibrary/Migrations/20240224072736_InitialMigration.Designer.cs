@@ -12,8 +12,8 @@ using SocialMediaApp.Authentication;
 namespace SocialMediaApp.AuthenticationLibrary.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    [Migration("20240218142622_Added-Friendships")]
-    partial class AddedFriendships
+    [Migration("20240224072736_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -239,9 +239,12 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("FriendId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -249,7 +252,7 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FriendId");
+                    b.HasIndex("AppUserId");
 
                     b.ToTable("Friendships");
                 });
@@ -257,6 +260,9 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
             modelBuilder.Entity("SocialMediaApp.SharedModels.AppUser", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+
+                    b.Property<string>("SignalRConnectionId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("AppUser");
                 });
@@ -314,13 +320,9 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
 
             modelBuilder.Entity("SocialMediaApp.SharedModels.Friendship", b =>
                 {
-                    b.HasOne("SocialMediaApp.SharedModels.AppUser", "Friend")
+                    b.HasOne("SocialMediaApp.SharedModels.AppUser", null)
                         .WithMany("Friendships")
-                        .HasForeignKey("FriendId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Friend");
+                        .HasForeignKey("AppUserId");
                 });
 
             modelBuilder.Entity("SocialMediaApp.SharedModels.AppUser", b =>

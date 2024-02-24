@@ -308,13 +308,13 @@ else
     }
 
     <script>
-        var connection = new signalR.HubConnectionBuilder()
+        var postConnection = new signalR.HubConnectionBuilder()
             .withUrl("/PostVoteHub")
         .configureLogging(signalR.LogLevel.Information)
         .withAutomaticReconnect()
         .build();
 
-        connection.start().then(function () {
+        postConnection.start().then(function () {
             console.log("SignalR Connection Established");
         }).catch(function (err) {
             console.error("Error establishing SignalR connection: " + err);
@@ -341,7 +341,7 @@ else
                 return;
             }
 
-            connection.invoke("UpdatePostVote", postId, isPositive).then(function (result) {
+            postConnection.invoke("UpdatePostVote", postId, isPositive).then(function (result) {
                 let btnPositiveCount = document.getElementById(postId + "-positiveCount");
                 let btnNegativeCount = document.getElementById(postId + "-negativeCount");
 
@@ -395,7 +395,7 @@ else
             });
         }
 
-        connection.on("PostVotesChanged", function (postId, positiveCount, negativeCount) {
+        postConnection.on("PostVotesChanged", function (postId, positiveCount, negativeCount) {
             let fullPositiveId = postId + "-positiveCount";
             let fullNegativeId = postId + "-negativeCount";
             document.getElementById(fullPositiveId).innerHTML = positiveCount + " Likes <i class='fa-regular fa-thumbs-up'></i>";

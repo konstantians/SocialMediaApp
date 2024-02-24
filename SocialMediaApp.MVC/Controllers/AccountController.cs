@@ -211,11 +211,8 @@ public class AccountController : Controller
     public async Task<IActionResult> EditAccount(bool duplicateUsernameError, bool duplicateEmailError,
         bool basicInformationChangeError, bool basicInformationChangeSuccess,
         bool passwordChangeSuccess, bool passwordChangeError, bool passwordMismatchError,
-        bool userWasNotFound, bool friendNotificationSentSuccessfully, bool friendNotificationSentUnsuccessfully, 
-        bool userAlreadyFriend, bool selfFriendRequest,
-        bool friendRemovalSuccess, bool friendRemovalFailure)
+        bool friendRemovalFailure, bool friendRemovalSuccess)
     {
-        //AppUser appUser = await _userHelperMethods.GetUserWithBankCardsAndTickets();
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
         AccountBasicSettingsViewModel accountBasicSettingsViewModel = new()
         {
@@ -260,14 +257,8 @@ public class AccountController : Controller
         ViewData["PasswordChangeError"] = passwordChangeError;
         ViewData["PasswordMismatchError"] = passwordMismatchError;
 
-        ViewData["UserWasNotFound"] = userWasNotFound;
-        ViewData["FriendNotificationSentSuccessfully"] = friendNotificationSentSuccessfully;
-        ViewData["FriendNotificationSentUnsuccessfully"] = friendNotificationSentUnsuccessfully;
-        ViewData["UserAlreadyFriend"] = userAlreadyFriend;
-        ViewData["SelfFriendRequest"] = selfFriendRequest;
-
-        ViewData["FriendRemovalSuccess"] = friendRemovalSuccess;
         ViewData["FriendRemovalFailure"] = friendRemovalFailure;
+        ViewData["FriendRemovalSuccess"] = friendRemovalSuccess;
         return View(editAccountModel);
     }
 
