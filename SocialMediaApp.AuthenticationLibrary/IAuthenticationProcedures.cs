@@ -22,6 +22,7 @@ namespace SocialMediaApp.AuthenticationLibrary
         Task<bool> RemoveFriend(string userId, string friendId);
         Task<bool> ResetPasswordAsync(string userId, string resetPasswordToken, string newPassword);
         Task<bool> SignInUserAsync(string username, string password, bool isPersistent);
+        Task<bool> UpdateSignalRConnectionIdOfUser(string userId, string connectionId);
         Task<bool> UpdateUserAccountAsync(AppUser appUser);
     }
 }

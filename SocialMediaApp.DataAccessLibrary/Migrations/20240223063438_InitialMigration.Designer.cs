@@ -12,7 +12,7 @@ using SocialMediaApp.DataAccessLibrary;
 namespace SocialMediaApp.DataAccessLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240218140003_InitialMigration")]
+    [Migration("20240223063438_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -105,7 +105,7 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MessageId")
+                    b.Property<int?>("MessageId")
                         .HasColumnType("int");
 
                     b.Property<bool>("NewFriendRequest")
@@ -121,7 +121,8 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MessageId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[MessageId] IS NOT NULL");
 
                     b.ToTable("Notifications");
                 });
@@ -169,6 +170,10 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
 
                     b.Property<int>("PostId")
                         .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

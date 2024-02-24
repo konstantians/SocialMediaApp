@@ -22,7 +22,8 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            return await _userManager.Users.Include(user => user.Friendships).ToListAsync();
+            //return await _userManager.Users.Include(user => user.Friendships).ToListAsync();
+            return await _userManager.Users.ToListAsync();
         }
         catch (Exception ex)
         {
@@ -329,7 +330,8 @@ public class AuthenticationProcedures : IAuthenticationProcedures
             if (foundUser is null)
                 return false;
 
-            Friendship foundFriendship = foundUser.Friendships.FirstOrDefault(friendship => friendship.FriendId == friendId);
+            Friendship foundFriendship = foundUser.Friendships.FirstOrDefault(friendship => friendship.FriendId == friendId 
+            || friendship.UserId == friendId);
             if (foundFriendship is null)
                 return false;
 
@@ -344,4 +346,24 @@ public class AuthenticationProcedures : IAuthenticationProcedures
             return false;
         }
     }
+
+    public async Task<bool> UpdateSignalRConnectionIdOfUser(string userId, string connectionId)
+    {
+        try
+        {
+            AppUser appUser = await FindByUserIdAsync(userId);
+            if (appUser is null)
+                return false;
+
+            appUser.SignalRConnectionId = connectionId;            
+            var result = await _userManager.UpdateAsync(appUser);
+            return result.Succeeded;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            throw;
+        }
+    }
+
 }

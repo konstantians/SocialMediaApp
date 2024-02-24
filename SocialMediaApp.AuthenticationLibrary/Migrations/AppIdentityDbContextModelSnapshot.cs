@@ -258,6 +258,9 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
+                    b.Property<string>("SignalRConnectionId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasDiscriminator().HasValue("AppUser");
                 });
 

@@ -1,5 +1,16 @@
 ﻿@inject IAuthenticationProcedures _authenticationProcedures;
+@inject INotificationDataAccess _notificationDataAccess; 
 
+@{
+    AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+    string appUserId = "";
+    if (appUser is not null){
+        appUserId = appUser.Id;
+        var result = await _notificationDataAccess.GetNotificationsOfUserAsync(appUserId);
+        appUser.Notifications = result.ToList();
+    }
+
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +28,7 @@
     <header style="margin-bottom:70px;">
         <nav class="navbar navbar-expand-sm navbar-dark bg-dark border-bottom box-shadow mb-3 fixed-top">
             <div class="container">
-                <a class="navbar-brand" href="/home">Cinema Application</a>
+                <a class="navbar-brand" href="/home">Social Media Application</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -36,6 +47,12 @@
                         }
                         else
                         {
+                            <li class="nav-item" id="notificationSection">
+                                <a class="nav-link" asp-controller="Notification" asp-action="ViewNotifications">
+                                    Notifications <span class="badge bg-primary rounded-pill" id="notificationSectionBadgeCount">
+                                        @appUser!.Notifications.Count</span>
+                                </a>
+                            </li>
                             <li class="nav-item me-1">
                                 <a class="nav-link" asp-controller="Account" asp-action="EditAccount">Account</a>
                             </li>
@@ -68,6 +85,36 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/NotificationHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .withAutomaticReconnect()
+            .build();
+
+        let notificationSection = document.getElementById('notificationSection');
+        if (notificationSection !== null) {
+            connection.start().then(function () {
+                storeConnectionSignalRId();
+            }).catch(function (err) {
+                console.error("Error establishing SignalR connection: " + err);
+            });
+        }
+
+        function storeConnectionSignalRId() {
+            connection.invoke("StoreSignalRConnectionId").then(function () {
+            }).catch(function (err) {
+                console.error("Error setting connection: " + err);
+            });
+        }
+
+        connection.on("UpdateNotificationCount", function (notificationCount) {
+            console.log('lol');
+            let badgeCount = document.getElementById('notificationSectionBadgeCount');
+            badgeCount.textContent = notificationCount;
+        });
+
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -88,7 +88,8 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IsPositive = table.Column<bool>(type: "bit", nullable: false),
-                    PostId = table.Column<int>(type: "int", nullable: false)
+                    PostId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -113,7 +114,7 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                     NewFriendRequest = table.Column<bool>(type: "bit", nullable: false),
                     FromUserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ToUserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MessageId = table.Column<int>(type: "int", nullable: false)
+                    MessageId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -139,7 +140,8 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                 name: "IX_Notifications_MessageId",
                 table: "Notifications",
                 column: "MessageId",
-                unique: true);
+                unique: true,
+                filter: "[MessageId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PostVotes_PostId",
