@@ -9,7 +9,7 @@ namespace SocialMediaApp.DataAccessLibrary.Repositories
         Task<bool> DeleteChatAsync(int id);
         Task<Chat> GetChatAsync(int id);
         Task<IEnumerable<Chat>> GetChatsAsync();
-        Task<IEnumerable<ChatsUsers>> GetChatsOfUserAsync(string userId);
+        Task<IEnumerable<Chat>> GetChatsOfUserAsync(string userId);
         Task<bool> LeaveChatAsync(string userId, int chatId);
     }
 }

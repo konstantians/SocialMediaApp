@@ -47,13 +47,16 @@
                         }
                         else
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="ViewChats">Chats</a>
+                            </li>
                             <li class="nav-item" id="notificationSection">
                                 <a class="nav-link" asp-controller="Notification" asp-action="ViewNotifications">
                                     Notifications <span class="badge bg-primary rounded-pill" id="notificationSectionBadgeCount">
                                         @appUser!.Notifications.Count</span>
                                 </a>
                             </li>
-                            <li class="nav-item me-1">
+                            <li class="nav-item">
                                 <a class="nav-link" asp-controller="Account" asp-action="EditAccount">Account</a>
                             </li>
                             <li class="nav-item">

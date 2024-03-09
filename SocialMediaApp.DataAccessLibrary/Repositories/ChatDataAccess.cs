@@ -28,13 +28,14 @@ public class ChatDataAccess : IChatDataAccess
         }
     }
 
-    public async Task<IEnumerable<ChatsUsers>> GetChatsOfUserAsync(string userId)
+    public async Task<IEnumerable<Chat>> GetChatsOfUserAsync(string userId)
     {
         try
         {
-            return await _context.ChatsUsers
-                .Include(chatsUsers => chatsUsers.Chat)
-                .Where(chatsUsers => chatsUsers.UserId == userId).ToListAsync();
+            return await _context.Chats
+                .Include(chat => chat.Messages)
+                .Include(chat => chat.ChatsUsers)
+                .Where(chat => chat.ChatsUsers.Any(cu => cu.UserId == userId)).ToListAsync();
         }
         catch (Exception ex)
         {
