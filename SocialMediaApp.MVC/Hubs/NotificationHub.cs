@@ -34,10 +34,12 @@ public class NotificationHub : Hub
         else
             friend = await _authenticationProcedures.FindByEmailAsync(email);
 
-        if (friend is null)
-            return ("That user is already in your friends list.|danger");
+        if (friend is null && username != "")
+            return ("There is not a registered user with the given username.|danger");
+        else if (friend is null && email != "")
+            return ("There is not a registered user with the given email.|danger");
 
-        if (friend.Id == appUser.Id)
+        if (friend!.Id == appUser.Id)
             return ("You can not send a friend request to yourself.|danger");
 
         if (appUser.Friendships.Any(friendship => friendship.UserId == friend.Id || friendship.FriendId == friend.Id))
@@ -86,7 +88,6 @@ public class NotificationHub : Hub
         notification.ToUserId = friend.Id;
         notification.FriendRequestRejected = true;
         notification.MessageId = null;
-
         int notificationCreated = await _notificationDataAccess.CreateNotificationAsync(notification);
 
         if (notificationCreated == -1)

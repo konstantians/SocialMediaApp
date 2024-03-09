@@ -17,6 +17,7 @@ public class NotificationController : Controller
         _authenticationProcedures = authenticationProcedures;
     }
 
+    [Authorize]
     public async Task<IActionResult> ViewNotifications(bool failedNotificationDeletion, bool successfulNotificationDeletion)
     {
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
