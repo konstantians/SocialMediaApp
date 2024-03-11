@@ -76,26 +76,23 @@ else if (chatCreatedSuccessfully || leftChatSuccess)
                         string usersOfChat = "";
                         chat.ChatsUsers.ForEach(chatUser => usersOfChat += chatUser.AppUser!.UserName + " - ");
                         usersOfChat = usersOfChat.Substring(0, usersOfChat.Length - 3);
-                        string lastMessageStatusText = chat.Messages.Count > 0 ? 
-                        $"Last Message: <span style='font-weight:bold'>{chat.Messages.FirstOrDefault()!.Content}</span>" 
-                        : "No Messages Yet";
                         <li class="list-group-item d-flex justify-content-between" id="chatLi-@count">
                             <div>
                                 ChatId: <span style="font-weight:bold">@chat.Id</span><br>
                                 Chat Users: <span style="font-weight:bold">@usersOfChat</span><br>
                                 @if(chat.Messages.Count > 0)
                                 {
-                                    @lastMessageStatusText;<br />
+                                    <div>Last Message: <span style='font-weight:bold'>@chat.Messages.FirstOrDefault()!.Content</span></div><br />
                                 }
                                 else
                                 {
-                                    @lastMessageStatusText;<br />
+                                    <div>No Messages Yet</div><br />
                                 }
                             </div>
                             <div>
-                                <button type="button" class="btn btn-primary me-1" asp-controller="Chat" asp-action="ViewChat">
+                                <a class="btn btn-primary me-1" asp-controller="Chat" asp-action="ViewChat" asp-route-chatId="@chat.Id">
                                     <i class="fa-solid fa-eye"></i>
-                                </button>
+                                </a>
                                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#leaveChatModal-@count">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>

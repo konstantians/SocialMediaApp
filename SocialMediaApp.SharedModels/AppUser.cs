@@ -14,5 +14,5 @@ public class AppUser : IdentityUser
     [NotMapped]
     public List<Post> Posts { get; set; } = new List<Post>();
     public string? SignalRConnectionId { get; set; }
-
+    public int? InChatWithId { get; set; }
 }

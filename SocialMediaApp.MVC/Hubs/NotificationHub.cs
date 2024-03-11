@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialMediaApp.AuthenticationLibrary;
 using SocialMediaApp.DataAccessLibrary.Repositories;
 using SocialMediaApp.SharedModels;
 using System.Collections.Generic;
+using System.Text;
 
 namespace SocialMediaApp.MVC.Hubs;
 
@@ -12,19 +14,26 @@ public class NotificationHub : Hub
 {
     private readonly IAuthenticationProcedures _authenticationProcedures;
     private readonly INotificationDataAccess _notificationDataAccess;
+    private readonly IChatDataAccess _chatDataAccess;
+    private readonly IMessageDataAccess _messageDataAccess;
 
-    public NotificationHub(IAuthenticationProcedures authenticationProcedures, INotificationDataAccess notificationDataAccess)
+    public NotificationHub(IAuthenticationProcedures authenticationProcedures, INotificationDataAccess notificationDataAccess, 
+            IChatDataAccess chatDataAccess, IMessageDataAccess messageDataAccess)
     {
         _authenticationProcedures = authenticationProcedures;
         _notificationDataAccess = notificationDataAccess;
+        _chatDataAccess = chatDataAccess;
+        _messageDataAccess = messageDataAccess;
     }
 
+    [Authorize]
     public async Task StoreSignalRConnectionId()
     {
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
         await _authenticationProcedures.UpdateSignalRConnectionIdOfUser(appUser.Id, Context.ConnectionId);
     }
 
+    [Authorize]
     public async Task<string> SendFriendNotification(string username, string email)
     {
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
@@ -150,6 +159,130 @@ public class NotificationHub : Hub
 
         return ("The friend request has been successfully accepted and a notification has been sent to " +
             $"the user to notify them of your decision!|success|{notificationCount}");
+    }
+
+    [Authorize]
+    public async Task EnterChat(int chatId)
+    {
+
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        await _authenticationProcedures.UpdateSignalRConnectionIdOfUser(appUser.Id, Context.ConnectionId);
+        await _authenticationProcedures.UpdateUserChatStatus(appUser.Id, chatId);
+        
+        Chat chat = await _chatDataAccess.GetChatAsync(chatId);
+        if (chat is null)
+            return;
+
+        StringBuilder updateMessagesStringBuilder = new StringBuilder();
+        foreach (Message message in chat.Messages)
+        {
+            //if these are the user messages skip
+            if (message.UserId == appUser.Id)
+                continue;
+
+            MessageStatus messageStatus = message.MessageStatuses.Where(messageStatus => messageStatus.UserId == appUser.Id && !messageStatus.IsSeen).FirstOrDefault();
+            if (messageStatus is not null)
+            {
+                messageStatus.IsSeen = true;
+                await _messageDataAccess.UpdateMessageStatusAsync(messageStatus.Id, messageStatus);
+                updateMessagesStringBuilder.Append(message.Id);
+                updateMessagesStringBuilder.Append("|");
+            }
+        }
+
+        if (updateMessagesStringBuilder.Length == 0)
+            return;
+
+        updateMessagesStringBuilder.Remove(updateMessagesStringBuilder.Length - 1, 1);
+
+        foreach (ChatsUsers chatUser in chat.ChatsUsers)
+        {
+
+            AppUser memberOfChat = await _authenticationProcedures.FindByUserIdAsync(chatUser.UserId!);
+            if (memberOfChat.InChatWithId == chatId)
+            {
+                await Clients.Client(memberOfChat.SignalRConnectionId!).
+                    SendAsync("UpdateSeenStatuses", appUser.UserName, updateMessagesStringBuilder.ToString());
+            }
+        }
+    }
+
+    [Authorize]
+    public async Task SendMessage(string chatUsersIdsString, string message, string myColor)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        string[] userIds = chatUsersIdsString.Split('|');
+
+        List<AppUser> membersOfChat = new List<AppUser>();
+        StringBuilder seenStatusStringBuilder = new StringBuilder().Append("Seen By: ");
+        foreach (string userId in userIds)
+        {            
+            //add the rest
+            AppUser memberOfChat = await _authenticationProcedures.FindByUserIdAsync(userId);
+            if(memberOfChat.InChatWithId == appUser.InChatWithId && memberOfChat.Id != appUser.Id)
+            {
+                seenStatusStringBuilder.Append(memberOfChat.UserName);
+                seenStatusStringBuilder.Append(", ");
+            }
+            membersOfChat.Add(memberOfChat);
+        }
+        seenStatusStringBuilder.Remove(seenStatusStringBuilder.Length - 2, 2);
+
+        string seenStatusString = seenStatusStringBuilder.ToString() == "Seen By" ? "Not Seen" : seenStatusStringBuilder.ToString();
+
+        //create message for chat
+        Message chatMessage = new Message();
+        chatMessage.ChatId = (int)appUser.InChatWithId!;
+        chatMessage.UserId = appUser.Id;
+        chatMessage.Content = message;
+        chatMessage.SentAt = DateTime.Now;
+        int messageId = await _messageDataAccess.CreateMessageAsync(chatMessage);
+
+        foreach (AppUser memberOfChat in membersOfChat)
+        {
+            if (appUser.Id != memberOfChat.Id)
+            {
+                MessageStatus messageStatus = new MessageStatus();
+                messageStatus.UserId = memberOfChat.Id;
+                messageStatus.MessageId = messageId;
+                messageStatus.IsSeen = memberOfChat.InChatWithId == appUser.InChatWithId ? true : false;
+                await _messageDataAccess.CreateMessageStatusAsync(messageStatus);
+            }
+
+            //if user in chat
+            if (memberOfChat.InChatWithId == appUser.InChatWithId)
+            {
+                //send an asynchronous message to them
+                await Clients.Client(memberOfChat.SignalRConnectionId!).
+                    SendAsync("ReceiveMessage", appUser.UserName, @DateTime.Now.ToString("dd/MM/yyyy HH:mm"), 
+                    message, seenStatusString, messageId.ToString(), myColor);
+                continue;
+            }
+
+            //otherwise send notification to them
+            Notification notification = new Notification();
+            notification.MessageId = messageId;
+            notification.FromUserId = appUser.Id;
+            notification.ToUserId = memberOfChat.Id;
+            notification.SentAt = DateTime.Now;
+            await _notificationDataAccess.CreateNotificationAsync(notification);
+
+            //update the count
+            var notificationsOfUser = await _notificationDataAccess.GetNotificationsOfUserAsync(notification.ToUserId);
+            await Clients.Client(memberOfChat.SignalRConnectionId!).SendAsync("UpdateNotificationCount", notificationsOfUser.Count());
+        }
+    }
+
+    [Authorize]
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if(appUser is not null)
+        {
+            await _authenticationProcedures.UpdateUserChatStatus(appUser.Id, null);
+        }
+
+        await base.OnDisconnectedAsync(exception);
     }
 
 }

@@ -24,5 +24,6 @@ namespace SocialMediaApp.AuthenticationLibrary
         Task<bool> SignInUserAsync(string username, string password, bool isPersistent);
         Task<bool> UpdateSignalRConnectionIdOfUser(string userId, string connectionId);
         Task<bool> UpdateUserAccountAsync(AppUser appUser);
+        Task<bool> UpdateUserChatStatus(string userId, int? chatId);
     }
 }

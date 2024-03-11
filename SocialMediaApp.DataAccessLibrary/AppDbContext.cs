@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<Chat> Chats { get; set; }
     public DbSet<ChatsUsers> ChatsUsers { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<MessageStatus> MessageStatuses { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<PostVote> PostVotes { get; set; }
@@ -36,6 +37,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Notification>().HasKey(notification => notification.Id);
         modelBuilder.Entity<Post>().HasKey(post => post.Id);
         modelBuilder.Entity<PostVote>().HasKey(postVote => postVote.Id);
+        modelBuilder.Entity<MessageStatus>().HasKey(messageStatus => messageStatus.Id);
 
         modelBuilder.Entity<Post>()
             .HasMany(post => post.PostVotes)
@@ -55,11 +57,17 @@ public class AppDbContext : DbContext
             .HasForeignKey(chatsUsers => chatsUsers.ChatId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Notification>()
-            .HasOne(notification => notification.Message)
-            .WithOne(message => message.Notification)
-            .HasForeignKey<Notification>(notification => notification.MessageId)
-            .IsRequired(false);
+        modelBuilder.Entity<Message>()
+            .HasMany(message => message.Notifications)
+            .WithOne(notification => notification.Message)
+            .HasForeignKey(notification => notification.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Message>()
+            .HasMany(message => message.MessageStatuses)
+            .WithOne(messageStatus => messageStatus.Message)
+            .HasForeignKey(messageStatus => messageStatus.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         base.OnModelCreating(modelBuilder);
     }

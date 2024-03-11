@@ -35,6 +35,7 @@ public class NotificationController : Controller
     }
 
     [Authorize]
+    [HttpPost]
     public async Task<IActionResult> DeleteNotification(int notificationId)
     {
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();

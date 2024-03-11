@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialMediaApp.DataAccessLibrary;
 
@@ -11,9 +12,11 @@ using SocialMediaApp.DataAccessLibrary;
 namespace SocialMediaApp.DataAccessLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240309215811_AddedMessageStatusEntity")]
+    partial class AddedMessageStatusEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,7 +144,9 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MessageId");
+                    b.HasIndex("MessageId")
+                        .IsUnique()
+                        .HasFilter("[MessageId] IS NOT NULL");
 
                     b.ToTable("Notifications");
                 });
@@ -237,9 +242,8 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
             modelBuilder.Entity("SocialMediaApp.SharedModels.Notification", b =>
                 {
                     b.HasOne("SocialMediaApp.SharedModels.Message", "Message")
-                        .WithMany("Notifications")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithOne("Notification")
+                        .HasForeignKey("SocialMediaApp.SharedModels.Notification", "MessageId");
 
                     b.Navigation("Message");
                 });
@@ -266,7 +270,7 @@ namespace SocialMediaApp.DataAccessLibrary.Migrations
                 {
                     b.Navigation("MessageStatuses");
 
-                    b.Navigation("Notifications");
+                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("SocialMediaApp.SharedModels.Post", b =>

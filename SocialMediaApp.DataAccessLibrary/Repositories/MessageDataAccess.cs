@@ -15,7 +15,8 @@ public class MessageDataAccess : IMessageDataAccess
     {
         try
         {
-            return await _context.Messages.Include(message => message.Notification).ToListAsync();
+            return await _context.Messages.Include(message => message.Notifications).
+                Include(message => message.MessageStatuses).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -29,7 +30,8 @@ public class MessageDataAccess : IMessageDataAccess
         try
         {
             return await _context.Messages
-                .Include(message => message.Notification)
+                .Include(message => message.Notifications)
+                .Include(message => message.MessageStatuses)
                 .FirstOrDefaultAsync(message => message.Id == id);
         }
         catch (Exception ex)
@@ -85,6 +87,56 @@ public class MessageDataAccess : IMessageDataAccess
                 return false;
 
             _context.Messages.Remove(foundMessage);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<MessageStatus> GetMessageStatusAsync(int id)
+    {
+        try
+        {
+            return await _context.MessageStatuses.FirstOrDefaultAsync(message => message.Id == id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw;
+        }
+    }
+
+
+    public async Task<int> CreateMessageStatusAsync(MessageStatus messageStatus)
+    {
+        try
+        {
+            var result = await _context.MessageStatuses.AddAsync(messageStatus);
+            await _context.SaveChangesAsync();
+
+            return result.Entity.Id;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return -1;
+        }
+    }
+
+    public async Task<bool> UpdateMessageStatusAsync(int messageStatusId, MessageStatus messageStatus)
+    {
+        try
+        {
+            MessageStatus foundMessageStatus = await GetMessageStatusAsync(messageStatusId);
+            if (foundMessageStatus is null)
+                return false;
+
+            foundMessageStatus.IsSeen = messageStatus.IsSeen;
             await _context.SaveChangesAsync();
 
             return true;

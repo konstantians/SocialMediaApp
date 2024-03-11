@@ -80,7 +80,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted bg-white shadow">
         <div class="container">
             &copy; 2024 - SocialMediaApp.MVC - Developed By Konstantinos Kinnas
         </div>
@@ -88,36 +88,42 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        var connection = new signalR.HubConnectionBuilder()
-            .withUrl("/NotificationHub")
-            .configureLogging(signalR.LogLevel.Information)
-            .withAutomaticReconnect()
-            .build();
 
-        let notificationSection = document.getElementById('notificationSection');
-        if (notificationSection !== null) {
-            connection.start().then(function () {
-                storeConnectionSignalRId();
-            }).catch(function (err) {
-                console.error("Error establishing SignalR connection: " + err);
+    
+    @if (ViewData["DoNotRenderScriptSection"] is null)
+    {
+        <script>
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl("/NotificationHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .withAutomaticReconnect()
+                .build();
+
+            let notificationSection = document.getElementById('notificationSection');
+            if (notificationSection !== null) {
+                connection.start().then(function () {
+                    console.log(".....SignalRsucks.....");
+                    storeConnectionSignalRId();
+                }).catch(function (err) {
+                    console.error("Error establishing SignalR connection: " + err);
+                });
+            }
+
+            function storeConnectionSignalRId() {
+                connection.invoke("StoreSignalRConnectionId").then(function () {
+                }).catch(function (err) {
+                    console.error("Error setting connection: " + err);
+                });
+            }
+
+            connection.on("UpdateNotificationCount", function (notificationCount) {
+                let badgeCount = document.getElementById('notificationSectionBadgeCount');
+                badgeCount.textContent = notificationCount;
             });
-        }
 
-        function storeConnectionSignalRId() {
-            connection.invoke("StoreSignalRConnectionId").then(function () {
-            }).catch(function (err) {
-                console.error("Error setting connection: " + err);
-            });
-        }
-
-        connection.on("UpdateNotificationCount", function (notificationCount) {
-            console.log('lol');
-            let badgeCount = document.getElementById('notificationSectionBadgeCount');
-            badgeCount.textContent = notificationCount;
-        });
-
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
+        </script>
+        
+        @await RenderSectionAsync("Scripts", required: false)
+    }
 </body>
 </html>
