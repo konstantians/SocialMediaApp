@@ -338,17 +338,10 @@ public class AccountController : Controller
             await _authenticationProcedures.UpdateUserAccountAsync(appUser);
             await _authenticationProcedures.LogOutUserAsync();
         }
-        return RedirectToAction("EmailChangeVerificationMessage", "Account", new { wasSuccessful = result });
-    }
 
-    //could be either anonymous or authorized depending on whether or not the process of changing the email was successful
-    [NonAction]
-    public IActionResult EmailChangeVerificationMessage(bool wasSuccessful)
-    {
-        ViewData["EmailSendSuccessfully"] = wasSuccessful;
-        return View();
+        ViewData["EmailSendSuccessfully"] = result;
+        return View("EmailChangeVerificationMessage");
     }
-
 
     [HttpGet]
     [AllowAnonymous]

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using SocialMediaApp.Authentication;
 using SocialMediaApp.AuthenticationLibrary;
 using SocialMediaApp.DataAccessLibrary;
@@ -8,7 +7,6 @@ using SocialMediaApp.DataAccessLibrary.Repositories;
 using SocialMediaApp.EmailServiceLibrary;
 using SocialMediaApp.MVC.Hubs;
 using SocialMediaApp.SharedModels;
-using System;
 
 namespace SocialMediaApp.MVC;
 
