@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialMediaApp.AuthenticationLibrary;
 using SocialMediaApp.DataAccessLibrary.Repositories;
 using SocialMediaApp.SharedModels;
-using System.Collections.Generic;
 using System.Text;
 
 namespace SocialMediaApp.MVC.Hubs;
@@ -180,7 +177,8 @@ public class NotificationHub : Hub
             if (message.UserId == appUser.Id)
                 continue;
 
-            MessageStatus messageStatus = message.MessageStatuses.Where(messageStatus => messageStatus.UserId == appUser.Id && !messageStatus.IsSeen).FirstOrDefault();
+            MessageStatus messageStatus = message.MessageStatuses.
+                Where(messageStatus => messageStatus.UserId == appUser.Id && !messageStatus.IsSeen).FirstOrDefault()!;
             if (messageStatus is not null)
             {
                 messageStatus.IsSeen = true;
