@@ -10,14 +10,12 @@ public class ChatController : Controller
 {
     private readonly IAuthenticationProcedures _authenticationProcedures;
     private readonly IChatDataAccess _chatDataAccess;
-    private readonly INotificationDataAccess _notificationDataAccess;
 
     public ChatController(IAuthenticationProcedures authenticationProcedures,
-        IChatDataAccess chatDataAccess, INotificationDataAccess notificationDataAccess)
+        IChatDataAccess chatDataAccess)
     {
         _authenticationProcedures = authenticationProcedures;
         _chatDataAccess = chatDataAccess;
-        _notificationDataAccess = notificationDataAccess;
     }
 
     [Authorize]
@@ -38,7 +36,7 @@ public class ChatController : Controller
             }
         }
 
-        chats = chats.OrderByDescending(chat => chat.Messages.Count > 0 ? chat.Messages.FirstOrDefault().SentAt : DateTime.MinValue).ToList();
+        chats = chats.OrderByDescending(chat => chat.Messages.Count > 0 ? chat.Messages.FirstOrDefault()!.SentAt : DateTime.MinValue).ToList();
 
 
         List<string> appUsersUsernames = new List<string>();
@@ -60,6 +58,17 @@ public class ChatController : Controller
     public async Task<IActionResult> ViewChat(int chatId)
     {
         Chat chat = await _chatDataAccess.GetChatAsync(chatId);
+        chat.Messages = chat.Messages.OrderBy(message => message.SentAt).ToList();
+        foreach (Message message in chat.Messages)
+        {
+            message.MessageAuthor = await _authenticationProcedures.FindByUserIdAsync(message.UserId!);
+            foreach (MessageStatus messageStatus in message.MessageStatuses)
+            {
+                messageStatus.UserOfMessageStatus = await _authenticationProcedures.FindByUserIdAsync(messageStatus.UserId!);
+            }
+        }
+
+        ViewData["DoNotRenderScriptSection"] = true;
         return View(chat);
     }
 

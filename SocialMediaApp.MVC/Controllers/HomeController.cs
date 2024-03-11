@@ -23,6 +23,7 @@ namespace SocialMediaApp.MVC.Controllers
             _postDataAccess = postDataAccess;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Index(bool successfulSignIn, bool failedAccountActivation, bool successfulAccountActivation,
             bool successfulPasswordReset, bool failedPasswordReset,
             bool successfulPostCreation, bool failedPostCreation,

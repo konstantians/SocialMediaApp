@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SocialMediaApp.Authentication;
 using SocialMediaApp.SharedModels;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SocialMediaApp.AuthenticationLibrary;
 
@@ -366,4 +367,22 @@ public class AuthenticationProcedures : IAuthenticationProcedures
         }
     }
 
+    public async Task<bool> UpdateUserChatStatus(string userId, int? chatId)
+    {
+        try
+        {
+            AppUser appUser = await FindByUserIdAsync(userId);
+            if (appUser is null)
+                return false;
+
+            appUser.InChatWithId = chatId;
+            var result = await _userManager.UpdateAsync(appUser);
+            return result.Succeeded;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            throw;
+        }
+    }
 }

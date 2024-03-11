@@ -341,6 +341,8 @@ public class AccountController : Controller
         return RedirectToAction("EmailChangeVerificationMessage", "Account", new { wasSuccessful = result });
     }
 
+    //could be either anonymous or authorized depending on whether or not the process of changing the email was successful
+    [NonAction]
     public IActionResult EmailChangeVerificationMessage(bool wasSuccessful)
     {
         ViewData["EmailSendSuccessfully"] = wasSuccessful;
@@ -406,6 +408,8 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> LogOut()
     {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        await _authenticationProcedures.UpdateUserChatStatus(appUser.Id, null);
         await _authenticationProcedures.LogOutUserAsync();
         return RedirectToAction("Index", "Home");
     }

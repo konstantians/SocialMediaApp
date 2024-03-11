@@ -1,5 +1,208 @@
-﻿@model Chat
+﻿@using System.Text;
+@inject IAuthenticationProcedures _authenticationProcedures;
+@model Chat
 
 @{
+    AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+
     ViewData["Title"] = "View Chat";
+    StringBuilder chatUsersIds = new StringBuilder();
+    string chatUsersIdsString;
+    string[] colors = new string[] { "bg-primary", "bg-warning", "bg-danger", "bg-success", "bg-info", "bg-dark"};
+    Dictionary<string, string> usersColorsPairs = new Dictionary<string, string>();
+    string myColor = "";
+
+    int counter = 0;
+    foreach (ChatsUsers chatsUsers in Model.ChatsUsers)
+    {
+        chatUsersIds.Append(chatsUsers.UserId);
+        chatUsersIds.Append("|");
+        usersColorsPairs.Add(chatsUsers.UserId!, counter < colors.Length ? colors[counter] : "bg-white");
+
+        if(chatsUsers.UserId == appUser.Id)
+        {
+            myColor = counter < colors.Length ? colors[counter] : "bg-white";
+        } 
+
+        counter++;
+    }
+
+    chatUsersIds.Remove(chatUsersIds.Length-1, 1);
+    chatUsersIdsString = chatUsersIds.ToString();
 }
+
+<style>
+    /* Custom CSS for scrollable list group */
+    .scrollable-list-group {
+        height: 58vh;
+        overflow-y: auto; /* Enable vertical scrolling */
+    }
+</style>
+
+<div class="row">
+    <div class="offset-3 col-6">
+        <div class="shadow p-4" style="background-color:white;">
+            <h2 class="text-center">Chat @Model.Id</h2>
+            <div class="row">
+                <div class="col-12">
+                    <div id="MessageListContainer" class="scrollable-list-group border border-1" onload="scrollToBottom()">
+                        <div class="list-group" id="MessageList">
+                            @foreach (Message message in Model.Messages)
+                            {
+                                StringBuilder seenStatusStringBuilder = new StringBuilder().Append("Seen By: ");
+                                foreach (MessageStatus messageStatus in message.MessageStatuses)
+                                {
+                                    if (messageStatus.IsSeen)
+                                    {
+                                        seenStatusStringBuilder.Append(messageStatus.UserOfMessageStatus.UserName);
+                                        seenStatusStringBuilder.Append(", ");
+                                    }
+                                }
+                                seenStatusStringBuilder.Remove(seenStatusStringBuilder.Length - 2, 2);
+                                usersColorsPairs.TryGetValue(message.UserId!, out string? backgroundColor);
+                                string sideOfTheElement = appUser.Id == message.UserId ? "" : "ms-auto";
+                                string addABitOfMargin = appUser.Id == message.UserId ? "ms-2" : "me-2";
+                                string seenStatusString = seenStatusStringBuilder.ToString() == "Seen By" ? "Not Seen" : seenStatusStringBuilder.ToString();
+
+                                <a class="list-group-item list-group-item-action flex-column align-items-start bg-opacity-10 w-75 my-1 border
+                                          @backgroundColor @sideOfTheElement @addABitOfMargin">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">@message.MessageAuthor.UserName</h5>
+                                        <small class="text-muted">@message.SentAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </div>
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <p class="mb-1">@message.Content</p>
+                                        <small class="text-muted" id="message_@message.Id">@seenStatusString</small>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 mt-3">
+                    <input id="chatUsersIdsInput" data-chatUsersIds="@chatUsersIdsString" data-chatId="@Model.Id"
+                    data-myColor="@myColor" data-myUsername="@appUser.UserName" hidden />
+                    <div class="d-flex align-items-end">
+                        <textarea class="form-control me-2 flex-grow-1" rows="1" id="messageTextArea" onkeydown="sendMessageOnEnter(event)"></textarea>
+                        <button class="btn btn-primary" style="width:17%;" onclick="sendMessage()" id="messageButton" type="button">
+                            Send <i class="fa-solid fa-paper-plane ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<script>
+    let messageTextArea = document.getElementById("messageTextArea");
+    let inputElement = document.getElementById('chatUsersIdsInput');
+    let chatUsersIdsValue = inputElement.getAttribute('data-chatUsersIds');
+    let chatId = inputElement.getAttribute('data-chatId');
+    let myColor = inputElement.getAttribute('data-myColor');
+    let myUsername = inputElement.getAttribute('data-myUsername');
+
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/NotificationHub")
+        .configureLogging(signalR.LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
+
+    let notificationSection = document.getElementById('notificationSection');
+    if (notificationSection !== null) {
+        connection.start().then(function () {
+            connection.invoke("EnterChat", parseInt(chatId)).then(function () {
+                console.log("Connection set with chat.");
+            }).catch(function (err) {
+                console.error("Error setting connection with chat: " + err);
+            });
+        }).catch(function (err) {
+            console.error("Error establishing SignalR connection: " + err);
+        });
+    }
+
+    connection.on("UpdateNotificationCount", function (notificationCount) {
+        let badgeCount = document.getElementById('notificationSectionBadgeCount');
+        badgeCount.textContent = notificationCount;
+    });
+
+    function sendMessage() {
+
+        connection.invoke("SendMessage", chatUsersIdsValue, messageTextArea.value, myColor).then(function () {
+            console.log("Message sent successfully.");
+            messageTextArea.value = '';
+            messageTextArea.focus();
+        }).catch(function (err) {
+            console.error("Error sending message: " + err);
+        });
+    }
+
+    connection.on("ReceiveMessage", function (receivedUsername, message, sentAt, seenStatus, messageId, receivedColor) {
+        displayMessage(receivedUsername, message, sentAt, seenStatus, messageId, receivedColor); // Function that displays the new message
+    });
+
+    // Function to handle the UpdateSeen event
+    connection.on("UpdateSeenStatuses", function (userUsername, messagesIds) {
+        let ids = messagesIds.split('|');
+        ids.forEach(function (id) {
+            let messageElement = document.getElementById('message_' + id);
+            if (messageElement.textContent.trim() === 'Not Seen') {
+                messageElement.textContent = 'Seen By: ' + userUsername
+            }
+            else {
+                messageElement.textContent += ', ' + userUsername
+            }
+        });
+    });
+
+    function displayMessage(receivedUsername, sentAt, message, seenStatus, messageId, receivedColor) {
+        let sideOfTheElement = receivedUsername === myUsername ? "" : "ms-auto";
+        let addABitOfMargin = receivedUsername === myUsername ? "ms-2" : "me-2";
+
+        // Create a new list item element
+        var listItem = document.createElement("a");
+        listItem.className = `list-group-item list-group-item-action flex-column align-items-start bg-opacity-10 w-75 my-1 border
+                ${receivedColor} ${sideOfTheElement} ${addABitOfMargin}`;
+        listItem.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">${receivedUsername}</h5>
+                            <small class="text-muted">${sentAt}</small>
+                        </div>
+                        <div class="d-flex w-100 justify-content-between">
+                            <p class="mb-1">${message}</p>
+                            <small class="text-muted" id="message_${messageId}">${seenStatus}</small>
+                        </div>
+                    `;
+
+        // Append the list item to the message list
+        document.getElementById("MessageList").appendChild(listItem);
+        scrollToBottom();
+    }
+
+    // Add an event listener for input changes
+    messageTextArea.addEventListener("input", function () {
+        // Calculate the new height based on the content
+        messageTextArea.style.height = "auto";
+        messageTextArea.style.height = (messageTextArea.scrollHeight) + "px";
+        messageTextArea.style.overflowY = "hidden";
+    });
+
+    function scrollToBottom() {
+        let messageListContainer = document.getElementById("MessageListContainer"); 
+        messageListContainer.scrollTop = messageListContainer.scrollHeight; // Scroll to the bottom of the container
+    }
+
+    window.onload = function () {
+        scrollToBottom();
+    };
+
+    // Send message by pressing Enter if textarea is focused
+    function sendMessageOnEnter(event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevent default behavior of Enter key
+            sendMessage();
+        }
+    }
+</script>

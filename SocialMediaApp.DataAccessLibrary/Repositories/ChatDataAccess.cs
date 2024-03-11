@@ -17,8 +17,9 @@ public class ChatDataAccess : IChatDataAccess
         try
         {
             return await _context.Chats
-                .Include(chat => chat.Messages)
                 .Include(chat => chat.ChatsUsers)
+                .Include(chat => chat.Messages)
+                .ThenInclude(message => message.MessageStatuses)
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -33,8 +34,9 @@ public class ChatDataAccess : IChatDataAccess
         try
         {
             return await _context.Chats
-                .Include(chat => chat.Messages)
                 .Include(chat => chat.ChatsUsers)
+                .Include(chat => chat.Messages)
+                .ThenInclude(message => message.MessageStatuses)
                 .Where(chat => chat.ChatsUsers.Any(cu => cu.UserId == userId)).ToListAsync();
         }
         catch (Exception ex)
@@ -49,8 +51,9 @@ public class ChatDataAccess : IChatDataAccess
         try
         {
             return await _context.Chats
-                .Include(chat => chat.Messages)
                 .Include(chat => chat.ChatsUsers)
+                .Include(chat => chat.Messages)
+                .ThenInclude(message => message.MessageStatuses)
                 .FirstOrDefaultAsync(chat => chat.Id == id);
         }
         catch (Exception ex)
