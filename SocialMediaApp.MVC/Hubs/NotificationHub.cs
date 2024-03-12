@@ -33,10 +33,13 @@ public class NotificationHub : Hub
     [Authorize]
     public async Task<string> SendFriendNotification(string username, string email)
     {
+        if ((username is null || username == "") && (email is null || email == ""))
+            return ("You need to fill the modal before submitting it.|danger");
+
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
         AppUser friend;
         if (username != "" || username is not null)
-            friend = await _authenticationProcedures.FindByUsernameAsync(username);
+            friend = await _authenticationProcedures.FindByUsernameAsync(username!);
         else
             friend = await _authenticationProcedures.FindByEmailAsync(email);
 
