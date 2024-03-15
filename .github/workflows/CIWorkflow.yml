@@ -1,0 +1,45 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+  
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 7.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build Module SharedModels
+      run: dotnet build SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --no-restore
+    - name: Build Module EmailService
+      run: dotnet build SocialMediaApp.EmailService/SocialMediaApp.EmailService.csproj --no-restore
+    - name: Build Module AuthenticationLibrary
+      run: dotnet build SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --no-restore
+    - name: Build Module DataAccessLibrary
+      run: dotnet build SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --no-restore
+    - name: Build Module MVC
+      run: dotnet build SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --no-restore
+    
+    - name: Test Module SharedModels
+      run: dotnet test SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --no-build --verbosity normal
+    - name: Test Module EmailService
+      run: dotnet test SocialMediaApp.EmailService/SocialMediaApp.EmailService.csproj --no-build --verbosity normal
+    - name: Test Module AuthenticationLibrary
+      run: dotnet test SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --no-build --verbosity normal
+    - name: Test Module DataAccessLibrary
+      run: dotnet test SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --no-build --verbosity normal
+    - name: Test Module MVC
+      run: dotnet test SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --no-build --verbosity normal
