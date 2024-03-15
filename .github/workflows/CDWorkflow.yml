@@ -1,0 +1,80 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 7.x
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build Module SharedModels
+      run: dotnet build SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --configuration Release --no-restore
+    - name: Build Module EmailServiceLibrary
+      run: dotnet build SocialMediaApp.EmailServiceLibrary/SocialMediaApp.EmailServiceLibrary.csproj --configuration Release --no-restore
+    - name: Build Module AuthenticationLibrary
+      run: dotnet build SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --configuration Release --no-restore
+    - name: Build Module DataAccessLibrary
+      run: dotnet build SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --configuration Release --no-restore
+    - name: Build Module MVC
+      run: dotnet build SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --configuration Release --no-restore
+
+    - name: DataAccess Migrations
+      run: dotnet ef database update --project SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --startup-project SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --context AppDbContext --connection ${{ secrets.DefaultData }}
+
+    - name: Authentication Migrations
+      run: dotnet ef database update --project SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --startup-project SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --context AppIdentityDbContext --connection ${{ secrets.DefaultAuthentication }}
+
+    - name: Publish Module SharedModels
+      run: dotnet publish SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --configuration Release --output ${{env.DOTNET_ROOT}}/myapp
+    - name: Publish Module EmailServiceLibrary
+      run: dotnet publish SocialMediaApp.EmailServiceLibrary/SocialMediaApp.EmailServiceLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}/myapp
+    - name: Publish Module AuthenticationLibrary
+      run: dotnet publish SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}/myapp
+    - name: Publish Module DataAccessLibrary
+      run: dotnet publish SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}/myapp
+    - name: Publish Module MVC
+      run: dotnet publish SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --configuration Release --output ${{env.DOTNET_ROOT}}/myapp
+
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v3
+      with:
+        name: .net-app
+        path: ${{env.DOTNET_ROOT}}/myapp
+        
+    
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+      
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'SocialMediaAppAssignement'
+          slot-name: 'production'
+          package: .
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_1234 }}
