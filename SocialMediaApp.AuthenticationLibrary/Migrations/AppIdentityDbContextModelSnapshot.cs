@@ -251,7 +251,7 @@ namespace SocialMediaApp.AuthenticationLibrary.Migrations
 
                     b.HasIndex("AppUserId");
 
-                    b.ToTable("Friendships");
+                    b.ToTable("Friendships", (string)null);
                 });
 
             modelBuilder.Entity("SocialMediaApp.SharedModels.AppUser", b =>
