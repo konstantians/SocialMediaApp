@@ -22,6 +22,9 @@ jobs:
     
     - name: Install EF Core Tools
       run: dotnet tool install --global dotnet-ef
+
+    - name: Install EF Core Design package
+      run: dotnet add SocialMediaApp.MVC/SocialMediaApp.MVC.csproj package Microsoft.EntityFrameworkCore.Design --version 7.0.17
       
     - name: Restore dependencies
       run: dotnet restore
