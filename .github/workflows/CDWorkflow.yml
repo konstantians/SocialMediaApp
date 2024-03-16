@@ -47,21 +47,21 @@ jobs:
       run: dotnet ef database update --project SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --startup-project SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --context AppIdentityDbContext --connection ${{ secrets.DefaultAuthentication }}
 
     - name: Publish Module SharedModels
-      run: dotnet publish SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --configuration Release --output ${{env.DOTNET_ROOT}}\myapp
+      run: dotnet publish SocialMediaApp.SharedModels/SocialMediaApp.SharedModels.csproj --configuration Release --output "C:\\Program Files\\dotnet\\myapp"
     - name: Publish Module EmailServiceLibrary
-      run: dotnet publish SocialMediaApp.EmailServiceLibrary/SocialMediaApp.EmailServiceLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}\myapp
+      run: dotnet publish SocialMediaApp.EmailServiceLibrary/SocialMediaApp.EmailServiceLibrary.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
     - name: Publish Module AuthenticationLibrary
-      run: dotnet publish SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}\myapp
+      run: dotnet publish SocialMediaApp.AuthenticationLibrary/SocialMediaApp.AuthenticationLibrary.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
     - name: Publish Module DataAccessLibrary
-      run: dotnet publish SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --configuration Release --output ${{env.DOTNET_ROOT}}\myapp
+      run: dotnet publish SocialMediaApp.DataAccessLibrary/SocialMediaApp.DataAccessLibrary.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
     - name: Publish Module MVC
-      run: dotnet publish SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --configuration Release --output ${{env.DOTNET_ROOT}}\myapp
+      run: dotnet publish SocialMediaApp.MVC/SocialMediaApp.MVC.csproj --configuration Release --output "${{ env.DOTNET_ROOT }}\\myapp"
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v3
       with:
         name: .net-app
-        path: ${{env.DOTNET_ROOT}}/myapp
+        path: "${{ env.DOTNET_ROOT }}\\myapp"
         
     
   deploy:
