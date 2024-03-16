@@ -84,4 +84,4 @@ jobs:
           app-name: 'SocialMediaAppAssignement'
           slot-name: 'production'
           package: .
-          publish-profile: ${{ secrets.AzureAppService_PublishProfile_1234 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_67BAECB8E57648CFB904F65D68692C59 }}
