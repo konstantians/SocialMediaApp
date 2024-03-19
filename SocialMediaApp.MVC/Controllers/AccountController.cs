@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocialMediaApp.AuthenticationLibrary;
 using SocialMediaApp.EmailServiceLibrary;
@@ -89,15 +90,22 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> SignIn(bool falseResetAccount, bool invalidCredentials)
+    public async Task<IActionResult> SignIn(string returnUrl, bool falseResetAccount, bool invalidCredentials, 
+        string externalIdentityProviderError)
     {
         AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
         if (appUser is not null)
             return RedirectToAction("Index", "Home");
 
+        SignInModel signInModel = new SignInModel();
+        signInModel.ReturnUrl = returnUrl;
+        var externalAuthenticationProviders = await _authenticationProcedures.GetExternalIdentityProvidersAsync();
+        signInModel.ExternalIdentityProviders = externalAuthenticationProviders.ToList();
+
         ViewData["FalseResetAccount"] = falseResetAccount;
         ViewData["InvalidCredentials"] = invalidCredentials;
-        return View();
+        ViewData["ExternalIdentityProviderError"] = externalIdentityProviderError;
+        return View(signInModel);
     }
 
     [HttpPost]
@@ -110,18 +118,51 @@ public class AccountController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View();
+            return RedirectToAction("SignIn", "Account");
         }
 
         bool result = await _authenticationProcedures.SignInUserAsync(signInModel.Username!, signInModel.Password!, signInModel.RememberMe);
         if (!result)
         {
-            ViewData["FalseResetAccount"] = false;
-            ViewData["InvalidCredentials"] = true;
-            return View();
+            return RedirectToAction("SignIn", "Account", new { invalidCredentials = true });
         }
 
         return RedirectToAction("Index", "Home", new { SuccessfulSignIn = true });
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> ExternalLogin(string identityProviderName, string returnUrl)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+
+
+        string redirectUrl = Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl})!;
+
+        AuthenticationProperties authenticationProperties = _authenticationProcedures
+            .GetExternalIdentityProvidersPropertiesAsync(identityProviderName, redirectUrl);
+
+        return new ChallengeResult(identityProviderName, authenticationProperties);
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> ExternalLoginCallback(string returnUrl, string remoteError)
+    {
+        AppUser appUser = await _authenticationProcedures.GetCurrentUserAsync();
+        if (appUser is not null)
+            return RedirectToAction("Index", "Home");
+        
+        if(remoteError != null)
+            return RedirectToAction("SignIn", "Account", new { externalIdentityProviderError = remoteError });
+
+        string errorCode = await _authenticationProcedures.ExternalSignInUserAsync();
+        if (errorCode is not null)
+            return RedirectToAction("SignIn", "Account", new { externalIdentityProviderError = errorCode });
+
+        returnUrl = returnUrl ?? Url.Content("~/");
+        return LocalRedirect(returnUrl);
     }
 
     [HttpPost]
@@ -323,15 +364,47 @@ public class AccountController : Controller
         string resetToken = await _authenticationProcedures.CreateChangeEmailTokenAsync(appUser, changeEmailModel.NewEmail!);
 
         //maybe do a check here
-        string message = "Click on the following link to confirm your account's new email:";
-        string? link = Url.Action("ConfirmChangeEmail", "Account", new
+
+        bool result;
+        //if the user has an empty password that means that their account was created with an external identity provider
+        if (appUser.PasswordHash is null)
         {
-            userId = WebUtility.UrlEncode(appUser.Id),
-            newEmail = WebUtility.UrlEncode(changeEmailModel.NewEmail),
-            token = WebUtility.UrlEncode(resetToken)
-        }, Request.Scheme);
-        string? confirmationLink = $"{message} {link}";
-        bool result = await _emailService.SendEmailAsync(changeEmailModel.NewEmail!, "Email Change Confirmation", confirmationLink);
+            //valid Guid for password
+            string newPassword = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 10).Replace('+', 'A').Replace('/', 'B') + "42kK!";
+
+            (bool passwordChangeResult, _) = await _authenticationProcedures.ChangePasswordAsync(appUser, null!, newPassword);
+            if (!passwordChangeResult)
+                return RedirectToAction("EditAccount", "Account", new { passwordChangeError = true });
+
+            //have to do it again, because otherwise the token is invalid
+            resetToken = await _authenticationProcedures.CreateChangeEmailTokenAsync(appUser, changeEmailModel.NewEmail!);
+
+            string message = "Click on the following link to confirm your account's new email:";
+            string? link = Url.Action("ConfirmChangeEmail", "Account", new
+            {
+                userId = WebUtility.UrlEncode(appUser.Id),
+                newEmail = changeEmailModel.NewEmail,
+                token = WebUtility.UrlEncode(resetToken)
+            }, Request.Scheme);
+
+            string? confirmationLink = $"{message} {link}\nWe have also updated your account password so you can login through the login page." +
+                $"\nNew Account Password : {newPassword}";
+            result = await _emailService.SendEmailAsync(changeEmailModel.NewEmail!, "Email Change Confirmation", confirmationLink);
+        }
+        else
+        {
+            string message = "Click on the following link to confirm your account's new email:";
+            string? link = Url.Action("ConfirmChangeEmail", "Account", new
+            {
+                userId = WebUtility.UrlEncode(appUser.Id),
+                newEmail = changeEmailModel.NewEmail,
+                token = WebUtility.UrlEncode(resetToken)
+            }, Request.Scheme);
+
+            string? confirmationLink = $"{message} {link}";
+            result = await _emailService.SendEmailAsync(changeEmailModel.NewEmail!, "Email Change Confirmation", confirmationLink);
+        }
+        
         if (result)
         {
             appUser.EmailConfirmed = false;
@@ -347,7 +420,7 @@ public class AccountController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmChangeEmail(string userId, string newEmail, string token)
     {
-        bool succeeded = await _authenticationProcedures.ChangeEmailAsync(userId, WebUtility.UrlDecode(token), WebUtility.UrlDecode(newEmail));
+        bool succeeded = await _authenticationProcedures.ChangeEmailAsync(userId, WebUtility.UrlDecode(token), newEmail);
 
         if (!succeeded)
         {

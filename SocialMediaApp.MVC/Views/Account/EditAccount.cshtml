@@ -139,17 +139,27 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendRemoval
             <div class="row">
                 <h4 class="text-center">Sensitive Account Settings</h4>
                 <div class="col-12 mb-4 mt-1">
-                    <label class="form-label" asp-for="@Model.ChangePasswordModel.OldPassword">
-                        <i class="fa-solid fa-lock me-2"></i>Account Password
-                    </label>
-                    <div class="input-group">
+                    @if(Model.ChangePasswordModel.OldPassword is not null){
+                        <label class="form-label" asp-for="@Model.ChangePasswordModel.OldPassword">
+                            <i class="fa-solid fa-lock me-2"></i>Account Password
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" asp-for="@Model.ChangePasswordModel.OldPassword"
+                                   value="@Model.ChangePasswordModel.OldPassword" readOnly>
+                            <a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                <i class="fa-solid fa-pencil"></i>
+                            </a>
+                        </div>
+                        <span asp-validation-for="@Model.ChangePasswordModel.OldPassword" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <label class="form-label" asp-for="@Model.ChangePasswordModel.OldPassword">
+                            <i class="fa-solid fa-lock me-2"></i>Account Password - Managed By External Provider
+                        </label>
                         <input type="password" class="form-control" asp-for="@Model.ChangePasswordModel.OldPassword"
-                               value="@Model.ChangePasswordModel.OldPassword" readOnly>
-                        <a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                            <i class="fa-solid fa-pencil"></i>
-                        </a>
-                    </div>
-                    <span asp-validation-for="@Model.ChangePasswordModel.OldPassword" class="text-danger"></span>
+                                   value="ManagedByExternalProvider" readOnly>
+                    }
                 </div>
                 <div class="col-12 mb-4 mt-1">
                     <label class="form-label" asp-for="@Model.ChangeEmailModel.OldEmail">

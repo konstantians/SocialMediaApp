@@ -1,4 +1,5 @@
-﻿using SocialMediaApp.SharedModels;
+﻿using Microsoft.AspNetCore.Authentication;
+using SocialMediaApp.SharedModels;
 
 namespace SocialMediaApp.AuthenticationLibrary
 {
@@ -12,10 +13,13 @@ namespace SocialMediaApp.AuthenticationLibrary
         Task<string> CreateChangeEmailTokenAsync(AppUser appUser, string newEmail);
         Task<string> CreateResetPasswordTokenAsync(AppUser appUser);
         Task<bool> DeleteUserAccountAsync(AppUser appUser);
+        Task<string> ExternalSignInUserAsync();
         Task<AppUser> FindByEmailAsync(string email);
         Task<AppUser> FindByUserIdAsync(string userId);
         Task<AppUser> FindByUsernameAsync(string username);
         Task<AppUser> GetCurrentUserAsync();
+        Task<IEnumerable<AuthenticationScheme>> GetExternalIdentityProvidersAsync();
+        AuthenticationProperties GetExternalIdentityProvidersPropertiesAsync(string identityProviderName, string redirectUrl);
         Task<List<AppUser>> GetUsersAsync();
         Task LogOutUserAsync();
         Task<(string, string)> RegisterUserAsync(AppUser appUser, string password, bool isPersistent);

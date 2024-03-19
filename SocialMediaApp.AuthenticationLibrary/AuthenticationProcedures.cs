@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SocialMediaApp.Authentication;
 using SocialMediaApp.SharedModels;
+using System.Diagnostics.Eventing.Reader;
+using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SocialMediaApp.AuthenticationLibrary;
@@ -148,7 +151,17 @@ public class AuthenticationProcedures : IAuthenticationProcedures
     {
         try
         {
-            var result = await _userManager.ChangePasswordAsync(appUser, currentPassword, newPassword);
+            IdentityResult result;
+            if (currentPassword is not null)
+            {
+                result = await _userManager.ChangePasswordAsync(appUser, currentPassword, newPassword);
+            }
+            //this can happen if the user created an account through an external identity provider(edge case)
+            else
+            {
+                result = await _userManager.AddPasswordAsync(appUser, newPassword);
+            }
+
             if (!result.Succeeded && result.Errors.Where(error => error.Code == "PasswordMismatch").Count() > 0)
                 return (false, "passwordMismatch");
             else if (!result.Succeeded)
@@ -277,22 +290,54 @@ public class AuthenticationProcedures : IAuthenticationProcedures
 
     public async Task<bool> ChangeEmailAsync(string userId, string changeEmailToken, string newEmail)
     {
+
         try
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user is null)
+            if (user == null)
             {
                 return false;
             }
 
-            var result = await _userManager.ChangeEmailAsync(user, newEmail, changeEmailToken);
+            var strategy = _identityContext.Database.CreateExecutionStrategy();
 
-            if (!result.Succeeded)
+            await strategy.ExecuteAsync(async () =>
             {
-                return false;
-            }
+                using (var transaction = _identityContext.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var result = await _userManager.ChangeEmailAsync(user, newEmail, changeEmailToken);
+                        if (!result.Succeeded)
+                            throw new Exception("Failed to change email.");
 
-            await _signInManager.SignInAsync(user, false);
+                        var externalLogins = await _userManager.GetLoginsAsync(user);
+
+                        foreach (var externalLogin in externalLogins)
+                        {
+                            // Check if the user has a login from Google or Microsoft
+                            if (externalLogin.LoginProvider == "Google" || externalLogin.LoginProvider == "Microsoft")
+                            {
+                                var removed = await _userManager.RemoveLoginAsync(user, externalLogin.LoginProvider, externalLogin.ProviderKey);
+                                if (!removed.Succeeded)
+                                    throw new Exception("Failed to remove external login.");
+
+                                break;
+                            }
+                        }
+
+                        await _signInManager.SignInAsync(user, false);
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        throw ex;
+                    }
+                }
+            });
+
             return true;
         }
         catch (Exception ex)
@@ -384,5 +429,48 @@ public class AuthenticationProcedures : IAuthenticationProcedures
             Console.WriteLine(ex);
             throw;
         }
+    }
+
+    public async Task<IEnumerable<AuthenticationScheme>> GetExternalIdentityProvidersAsync()
+    {
+        return await _signInManager.GetExternalAuthenticationSchemesAsync();
+    }
+
+    public AuthenticationProperties GetExternalIdentityProvidersPropertiesAsync(string identityProviderName, string redirectUrl)
+    {
+        return _signInManager.ConfigureExternalAuthenticationProperties(identityProviderName, redirectUrl);
+    }
+
+    public async Task<string> ExternalSignInUserAsync()
+    {
+        ExternalLoginInfo loginInfo = await _signInManager.GetExternalLoginInfoAsync();
+        if (loginInfo == null)
+            return "login info of external identity provider was not received";
+
+        var result = await _signInManager.ExternalLoginSignInAsync(loginInfo.LoginProvider, loginInfo.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+        if (result.Succeeded)
+            return null!;
+        
+        string email = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)!;
+        //if the returned information does not contain email give up
+        if (email == null)
+            return "email info of external identity provider was not received";
+
+        //if the user has a local account
+        AppUser user = await FindByEmailAsync(email);
+        if (user != null)
+        {
+            await _userManager.AddLoginAsync(user, loginInfo);
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            return null!;
+        }
+
+        //otherwise
+        user = new AppUser() { UserName = email, Email = email , EmailConfirmed = true};
+        await _userManager.CreateAsync(user);
+        await _userManager.AddLoginAsync(user, loginInfo);
+        await _signInManager.SignInAsync(user, isPersistent: false);
+
+        return null!;
     }
 }
