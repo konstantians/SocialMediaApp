@@ -39,7 +39,7 @@
                             <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
 
-                        @if (!(await _authenticationProcedures.CheckIfUserIsLoggedIn()))
+                        @if (appUser is null)
                         {
                             <li class="nav-item">
                                 <a class="nav-link btn btn-outline-primary my-2 my-sm-0" asp-controller="Account" asp-action="SignIn">Sign In</a>
@@ -51,9 +51,11 @@
                                 <a class="nav-link" asp-controller="Chat" asp-action="ViewChats">Chats</a>
                             </li>
                             <li class="nav-item" id="notificationSection">
+                                
                                 <a class="nav-link" asp-controller="Notification" asp-action="ViewNotifications">
                                     Notifications <span class="badge bg-primary rounded-pill" id="notificationSectionBadgeCount">
-                                        @appUser!.Notifications.Count</span>
+                                        @appUser!.Notifications!.Count
+                                    </span>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -102,7 +104,6 @@
             let notificationSection = document.getElementById('notificationSection');
             if (notificationSection !== null) {
                 connection.start().then(function () {
-                    console.log(".....SignalRsucks.....");
                     storeConnectionSignalRId();
                 }).catch(function (err) {
                     console.error("Error establishing SignalR connection: " + err);

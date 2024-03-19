@@ -57,6 +57,12 @@ public class Program
             options.Cookie.HttpOnly = true; // Make the cookie accessible only through HTTP (not JavaScript) for security reasons
         });
 
+        builder.Services.AddAuthentication().AddGoogle(options =>
+        {
+            options.ClientId = configuration.GetValue<string>("Authentication:Google:ClientId")!;
+            options.ClientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret")!;
+        });
+
         builder.Services.AddScoped<IAuthenticationProcedures, AuthenticationProcedures>();
         builder.Services.AddScoped<IPostDataAccess, PostDataAccess>();
         builder.Services.AddScoped<IMessageDataAccess, MessageDataAccess>();
@@ -81,6 +87,7 @@ public class Program
 
         app.UseRouting();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllerRoute(
