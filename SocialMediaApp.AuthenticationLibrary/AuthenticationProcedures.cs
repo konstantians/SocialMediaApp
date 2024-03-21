@@ -314,20 +314,13 @@ public class AuthenticationProcedures : IAuthenticationProcedures
                         var externalLogins = await _userManager.GetLoginsAsync(user);
 
                         foreach (var externalLogin in externalLogins)
-                        {
-                            // Check if the user has a login from Google or Microsoft
-                            if (externalLogin.LoginProvider == "Google" || externalLogin.LoginProvider == "Microsoft")
-                            {
-                                var removed = await _userManager.RemoveLoginAsync(user, externalLogin.LoginProvider, externalLogin.ProviderKey);
-                                if (!removed.Succeeded)
-                                    throw new Exception("Failed to remove external login.");
-
-                                break;
-                            }
+                        {                            
+                            var removed = await _userManager.RemoveLoginAsync(user, externalLogin.LoginProvider, externalLogin.ProviderKey);
+                            if (!removed.Succeeded)
+                                throw new Exception("Failed to remove external login.");
                         }
 
                         await _signInManager.SignInAsync(user, false);
-
                         await transaction.CommitAsync();
                     }
                     catch (Exception ex)
@@ -450,8 +443,9 @@ public class AuthenticationProcedures : IAuthenticationProcedures
         var result = await _signInManager.ExternalLoginSignInAsync(loginInfo.LoginProvider, loginInfo.ProviderKey, isPersistent: false, bypassTwoFactor: false);
         if (result.Succeeded)
             return null!;
-        
-        string email = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)!;
+
+        string email = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)! ?? loginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        string username = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)! ?? loginInfo.Principal.FindFirstValue(ClaimTypes.Surname)! + loginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)?.Substring(0, 5);
         //if the returned information does not contain email give up
         if (email == null)
             return "email info of external identity provider was not received";
@@ -466,7 +460,7 @@ public class AuthenticationProcedures : IAuthenticationProcedures
         }
 
         //otherwise
-        user = new AppUser() { UserName = email, Email = email , EmailConfirmed = true};
+        user = new AppUser() { UserName = username, Email = email, EmailConfirmed = true};
         await _userManager.CreateAsync(user);
         await _userManager.AddLoginAsync(user, loginInfo);
         await _signInManager.SignInAsync(user, isPersistent: false);

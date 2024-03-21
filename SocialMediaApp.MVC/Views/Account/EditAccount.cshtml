@@ -162,8 +162,11 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendRemoval
                     }
                 </div>
                 <div class="col-12 mb-4 mt-1">
+                    @{
+                        string managedByExternalProvider = @Model!.ChangeEmailModel!.OldEmail!.Contains("@") ? "" : "- Managed By External Provider";
+                    }
                     <label class="form-label" asp-for="@Model.ChangeEmailModel.OldEmail">
-                        <i class="fa-solid fa-envelope me-2"></i>Account Email
+                        <i class="fa-solid fa-envelope me-2"></i>Account Email @managedByExternalProvider
                     </label>
                     <div class="input-group">
                         <input type="email" class="form-control" asp-for="@Model.ChangeEmailModel.OldEmail"
@@ -252,6 +255,12 @@ else if (basicInformationChangeSuccess || passwordChangeSuccess || friendRemoval
                             <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill" /></svg>
                             <div>
                                 This action will log you out of your account and it will deactivate it until you confirm your new email.<br />
+                            </div>
+                        </div>
+                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                            <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill" /></svg>
+                            <div>
+                                This action may also disconnect your account from your external identity provider(for example Google).<br />
                             </div>
                         </div>
                         <div class="row">
