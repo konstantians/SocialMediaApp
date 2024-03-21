@@ -82,17 +82,17 @@
                 <div id="external-service-providers" class="d-grid gap-2">
                     @foreach (AuthenticationScheme identityProvider in Model.ExternalIdentityProviders)
                     {
+                        string icon = identityProvider.Name switch
+                        {
+                            "Google" => "fa-google",
+                            "Microsoft" => "fa-microsoft",
+                            _ => ""
+                        };
                         <button class="btn text-start py-2 px-3" style="background-color:transparent;border: 1px solid #ced4da;" type="submit"
                             name="identityProviderName" value="@identityProvider.Name">
-                            <i class="fa-brands fa-google me-2"></i>Continue with @identityProvider.DisplayName
+                            <i class="fa-brands @icon me-2"></i>Continue with @identityProvider.DisplayName
                         </button>
                     }
-                    <button class="btn text-start py-2 px-3" style="background-color:transparent;border: 1px solid #ced4da;" type="button">
-                        <i class="fa-brands fa-microsoft me-2"></i>Continue with Microsoft
-                    </button>
-                    <button class="btn text-start py-2 px-3" style="background-color:transparent;border: 1px solid #ced4da;" type="button">
-                        <i class="fa-brands fa-square-facebook me-2"></i>Continue with Facebook
-                    </button>
                 </div>
                 <input name="returnUrl" value="@Model.ReturnUrl" hidden/>
             </form>

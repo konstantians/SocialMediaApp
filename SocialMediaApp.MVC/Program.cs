@@ -61,6 +61,10 @@ public class Program
         {
             options.ClientId = configuration.GetValue<string>("Authentication:Google:ClientId")!;
             options.ClientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret")!;
+        }).AddMicrosoftAccount(options =>
+        {
+            options.ClientId = configuration.GetValue<string>("Authentication:Microsoft:ClientId")!;
+            options.ClientSecret = configuration.GetValue<string>("Authentication:Microsoft:ClientSecret")!;
         });
 
         builder.Services.AddScoped<IAuthenticationProcedures, AuthenticationProcedures>();
