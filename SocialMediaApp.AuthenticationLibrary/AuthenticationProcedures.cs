@@ -445,7 +445,7 @@ public class AuthenticationProcedures : IAuthenticationProcedures
             return null!;
 
         string email = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)! ?? loginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        string username = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)! ?? loginInfo.Principal.FindFirstValue(ClaimTypes.Surname)! + loginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)?.Substring(0, 5);
+        string username = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)! ?? loginInfo.Principal.FindFirstValue(ClaimTypes.Name)! + loginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)?.Substring(0, 5);
         //if the returned information does not contain email give up
         if (email == null)
             return "email info of external identity provider was not received";

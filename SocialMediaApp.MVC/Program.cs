@@ -65,6 +65,10 @@ public class Program
         {
             options.ClientId = configuration.GetValue<string>("Authentication:Microsoft:ClientId")!;
             options.ClientSecret = configuration.GetValue<string>("Authentication:Microsoft:ClientSecret")!;
+        }).AddTwitter(options =>
+        {
+            options.ConsumerKey = configuration.GetValue<string>("Authentication:Twitter:ClientId")!;
+            options.ConsumerSecret = configuration.GetValue<string>("Authentication:Twitter:ClientSecret")!;
         });
 
         builder.Services.AddScoped<IAuthenticationProcedures, AuthenticationProcedures>();
