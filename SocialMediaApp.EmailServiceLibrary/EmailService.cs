@@ -4,16 +4,21 @@ using System.Net;
 using System.Net.Mail;
 using System;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// class that handles the email functionality of the app
 /// </summary>
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration Configuration;
-    public EmailService(IConfiguration configuration)
+    private readonly IConfiguration _configuration;
+    private readonly ILogger _logger;
+
+    public EmailService(IConfiguration configuration, ILogger<EmailService> logger = null!)
     {
-        Configuration = configuration;
+        _configuration = configuration;
+        _logger = logger ?? NullLogger<EmailService>.Instance;
     }
 
     /// <summary>
@@ -30,7 +35,7 @@ public class EmailService : IEmailService
     /// <returns>Confirmation on whether or not the email was send successfully</returns>
     public async Task<bool> SendEmailAsync(string emailSender, string emailReceiver, string title, string body)
     {
-        SmtpSettings smtpSettings = Configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
+        SmtpSettings smtpSettings = _configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
 
         using var message = new MailMessage(emailSender, emailReceiver);
 
@@ -45,11 +50,17 @@ public class EmailService : IEmailService
         try
         {
             await smtpClient.SendMailAsync(message);
+            _logger.LogError(0600, "Successfully sent email. " +
+                "EmailSender:{EmailSender}, EmailReceiver:{EmailReceiver}, Title:{Title}, Body:{Body}",
+                emailSender, emailReceiver, title, body);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.StackTrace);
+            _logger.LogError(2600, ex, "An error occurred while trying to send email. " +
+                "EmailSender:{EmailSender}, EmailReceiver:{EmailReceiver}, Title:{Title}, Body:{Body}" +
+                "ExceptionMessage: {ExceptionMessage}. StackTrace: {StackTrace}.",
+                emailSender, emailReceiver, title, body, ex.Message, ex.StackTrace);
             return false;
         }
     }
@@ -66,7 +77,7 @@ public class EmailService : IEmailService
     /// <returns>Confirmation on whether or not the email was send successfully</returns>
     public async Task<bool> SendEmailAsync(string emailReceiver, string title, string body)
     {
-        SmtpSettings? smtpSettings = Configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
+        SmtpSettings? smtpSettings = _configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
 
         using var message = new MailMessage("kinnaskonstantinos0@gmail.com", emailReceiver);
 
@@ -81,11 +92,16 @@ public class EmailService : IEmailService
         try
         {
             await smtpClient.SendMailAsync(message);
+            _logger.LogError(0601, "Successfully sent email. EmailReceiver:{EmailReceiver}, Title:{Title}, Body:{Body}",
+                emailReceiver, title, body);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.StackTrace);
+            _logger.LogError(2601, ex, "An error occurred while trying to send email. " +
+                "EmailReceiver:{EmailReceiver}, Title:{Title}, Body:{Body}" +
+                "ExceptionMessage: {ExceptionMessage}. StackTrace: {StackTrace}.",
+                emailReceiver, title, body, ex.Message, ex.StackTrace);
             return false;
         }
     }
@@ -101,7 +117,7 @@ public class EmailService : IEmailService
     /// <returns>Confirmation on whether or not the email was send successfully</returns>
     public async Task<bool> SendContactFormEmailAsync(string emailSender, string title, string body)
     {
-        SmtpSettings? smtpSettings = Configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
+        SmtpSettings? smtpSettings = _configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
 
         using var message = new MailMessage("kinnaskonstantinos0@gmail.com", "kinnaskonstantinos0@gmail.com");
         message.Subject = title;
@@ -115,11 +131,16 @@ public class EmailService : IEmailService
         try
         {
             await smtpClient.SendMailAsync(message);
+            _logger.LogError(0602, "Successfully sent contact form email. EmailSender:{EmailSender}, Title:{Title}, Body:{Body}",
+                emailSender, title, body);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.StackTrace);
+            _logger.LogError(2602, ex, "An error occurred while trying to send email from contact form. " +
+                "EmailSender:{EmailSender}, Title:{Title}, Body:{Body}" +
+                "ExceptionMessage: {ExceptionMessage}. StackTrace: {StackTrace}.",
+                emailSender, title, body, ex.Message, ex.StackTrace);
             return false;
         }
     }
